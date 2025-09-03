@@ -1,17 +1,16 @@
 package com.kbsw.seasonthon.global.base.response;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor
+@JsonTypeName("false")
 public final class FailedResponseBody extends ResponseBody<Void> {
-    private String msg;
-    private boolean success = false;
+
+    private final String msg;
 
     public FailedResponseBody(String code, String msg) {
         this.setCode(code);
         this.msg = msg;
-        this.success = false;
     }
 }

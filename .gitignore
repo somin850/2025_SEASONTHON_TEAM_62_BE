@@ -1,6 +1,6 @@
+HELP.md
 .gradle
 build/
-build 2/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
@@ -38,8 +38,3 @@ out/
 
 .env
 .application.yml
-
-src/main/resources/application.yml
-build/
-*.jar
-src/main/resources/application.yml

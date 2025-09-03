@@ -1,16 +1,18 @@
 package com.kbsw.seasonthon.global.base.response;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor
+@JsonTypeName("true")
 public final class SuccessResponseBody<T> extends ResponseBody<T> {
-    private T data;
-    private boolean success = true;
+    private final T data;
 
-    public SuccessResponseBody(T data) {
-        this.data = data;
-        this.success = true;
+    public SuccessResponseBody() {
+        data = null;
+    }
+
+    public SuccessResponseBody(T result) {
+        this.data = result;
     }
 }
