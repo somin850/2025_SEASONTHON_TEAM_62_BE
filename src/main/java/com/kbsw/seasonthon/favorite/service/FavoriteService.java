@@ -87,10 +87,14 @@ public class FavoriteService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
 
-        Favorite favorite = favoriteRepository.findByIdAndUser(favoriteId, user)
-                .orElseThrow(() -> new BusinessException(ExceptionType.FAVORITE_NOT_FOUND));
+        // 먼저 해당 즐겨찾기가 존재하고 사용자 소유인지 확인
+        boolean exists = favoriteRepository.findByIdAndUser(favoriteId, user).isPresent();
+        if (!exists) {
+            throw new BusinessException(ExceptionType.FAVORITE_NOT_FOUND);
+        }
 
-        favoriteRepository.delete(favorite);
+        // Repository의 deleteByIdAndUser 메서드 사용
+        favoriteRepository.deleteByIdAndUser(favoriteId, user);
         log.info("즐겨찾기 삭제 완료 - favoriteId: {}", favoriteId);
     }
 }
