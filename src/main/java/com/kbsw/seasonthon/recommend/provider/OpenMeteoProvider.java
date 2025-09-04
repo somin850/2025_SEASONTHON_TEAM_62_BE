@@ -1,4 +1,4 @@
-package com.kbsw.seasonthon.recommend.external;
+package com.kbsw.seasonthon.recommend.provider;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
