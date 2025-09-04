@@ -55,7 +55,8 @@ public class SecurityConfig {
                                 "/oauth2/**",
                                 "/login/oauth2/**",
                                 "/error",
-                                "/favicon.ico"
+                                "/favicon.ico",
+                                "*"
                         ).permitAll()
 
                         // 그 외 공개/인증 정책은 프로젝트에 맞게 조정
