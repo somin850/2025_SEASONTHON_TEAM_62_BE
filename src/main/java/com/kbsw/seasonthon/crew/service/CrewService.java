@@ -240,15 +240,10 @@ public class CrewService {
             request.getStartLocation(),
             status,
             safetyLevel,
-            request.getMinDistance(),
+            request.getTags(),
             request.getMaxDistance(),
             request.getMinPace(),
-            request.getMaxPace(),
             request.getStartTimeFrom(),
-            request.getStartTimeTo(),
-            request.getMinDuration(),
-            request.getMaxDuration(),
-            request.getTags(),
             pageable
         );
         
