@@ -138,7 +138,7 @@ public class DataInitializer implements CommandLineRunner {
                 .type("normal")
                 .distanceKm(5.2)
                 .safetyScore(75)
-                .safetyLevel(SafetyLevel.NORMAL)
+                .safetyLevel(SafetyLevel.MEDIUM)
                 .durationMin(35)
                 .startLocation("경북대학교 정문")
                 .pace("6'00\"/km")
@@ -184,7 +184,7 @@ public class DataInitializer implements CommandLineRunner {
                 .type("challenging")
                 .distanceKm(15.0)
                 .safetyScore(60)
-                .safetyLevel(SafetyLevel.RISKY)
+                .safetyLevel(SafetyLevel.UNSAFE)
                 .durationMin(90)
                 .startLocation("대전 월드컵경기장")
                 .pace("4'45\"/km")
@@ -213,7 +213,7 @@ public class DataInitializer implements CommandLineRunner {
                 .startLocation("부산 해운대해수욕장")
                 .pace("7'00\"/km")
                 .startTime(LocalDateTime.now().minusDays(1).withHour(19).withMinute(0))
-                .status(CrewStatus.COMPLETED)
+                .status(CrewStatus.CLOSED)
                 .waypoints(Arrays.asList(
                     "35.1595,129.1606",
                     "35.1605,129.1616"

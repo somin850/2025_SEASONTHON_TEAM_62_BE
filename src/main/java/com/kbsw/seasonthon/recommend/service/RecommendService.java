@@ -3,7 +3,7 @@ package com.kbsw.seasonthon.recommend.service;
 import com.kbsw.seasonthon.recommend.dto.request.LiveAdviceRequest;
 import com.kbsw.seasonthon.recommend.dto.request.ListingReviewRequest;
 import com.kbsw.seasonthon.recommend.dto.response.ListingReviewResponse;
-import com.kbsw.seasonthon.recommend.external.OpenMeteoProvider;
+import com.kbsw.seasonthon.recommend.provider.OpenMeteoProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
