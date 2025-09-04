@@ -30,7 +30,10 @@ public enum ExceptionType {
     DUPLICATED_USERNAME(CONFLICT, "U003", "중복 아이디(username)"),
     ALREADY_REGISTERED_USER(NOT_ACCEPTABLE , "U006","이미 최종 회원 가입된 사용자"),
     NOT_REGISTERED_USER(FORBIDDEN , "U007","최종 회원 가입 되지 않은 사용자"),
-    UNAUTHORIZED_USER(UNAUTHORIZED, "U005","로그인 되지 않은 사용자");
+    UNAUTHORIZED_USER(UNAUTHORIZED, "U005","로그인 되지 않은 사용자"),
+    
+    // favorite
+    FAVORITE_NOT_FOUND(NOT_FOUND, "F001", "존재하지 않는 즐겨찾기");
 
     private final HttpStatus status;
     private final String code;

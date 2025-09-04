@@ -3,17 +3,14 @@ server:
   forward-headers-strategy: native
 
 spring:
-  profiles:
-    active: dev  # 기본 프로파일을 dev로 설정
-  
   config:
     import: optional:file:.env[.properties]   # .env ????
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/SeasonThon?useSSL=false&characterEncoding=UTF-8&serverTimezone=UTC
-    username: scott
-    password: tiger
+    url: jdbc:mysql://localhost:3306/SeasonThon?useSSL=false&characterEncoding=UTF-8&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+    username: root
+    password: root 
     hikari:
       minimum-idle: 2
       maximum-pool-size: 10
@@ -22,7 +19,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update   # create ? update (?? ?? ??? ??? ??)
+      ddl-auto: create-drop   # 테스트용으로 매번 새로 생성
     show-sql: true
     defer-datasource-initialization: true
     properties:
@@ -69,7 +66,7 @@ spring:
 
 jwt:
   # .env? JWT_SECRET? ??? JWT_SECRET_KEY? ???? ??
-  secret: mySecretKey123456789012345678901234567890
+  secret: ${JWT_SECRET:${JWT_SECRET_KEY:mySecretKey123456789012345678901234567890}}
   expiration:
     access: 3600000
     refresh: 1209600000
@@ -96,6 +93,6 @@ firebase:
 
 xai:
   api:
-    key: ${XAI_API_KEY:}
+    key: xai-CmAFeBIaScA6fm4PkNBPYlh8w0GZfrFrvV4gIXzhtBBNkSpFYpvi3TLwXfT16WZZDwVjnfDahjf8Xlw1
   model: grok-3
   base-url: https://api.x.ai/v1
