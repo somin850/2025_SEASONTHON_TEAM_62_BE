@@ -67,6 +67,52 @@ def recommend_routes():
     except Exception as e:
         return jsonify({"error": "An unexpected error occurred: " + str(e)}), 500
 
+@app.route('/api/selected-route', methods=['POST'])
+def save_selected_route():
+    """
+    API endpoint to save the selected route by the user.
+    """
+    data = request.get_json(silent=True)
+    
+    if not data or not isinstance(data, dict):
+        return jsonify({"error": "Request body must be a valid JSON object"}), 400
+    
+    # Extract route information
+    route_id = data.get('route_id')
+    route_type = data.get('type')
+    distance_km = data.get('distance_km')
+    safety_score = data.get('safety_score')
+    estimated_time_min = data.get('estimated_time_min')
+    waypoints = data.get('waypoints')
+    
+    if not all([route_id, route_type, distance_km, safety_score, waypoints]):
+        return jsonify({"error": "Missing required route parameters"}), 400
+    
+    try:
+        # Save selected route to a JSON file (or database in production)
+        selected_route = {
+            "route_id": route_id,
+            "type": route_type,
+            "distance_km": distance_km,
+            "safety_score": safety_score,
+            "estimated_time_min": estimated_time_min,
+            "waypoints": waypoints,
+            "selected_at": pd.Timestamp.now().isoformat()
+        }
+        
+        # Save to file
+        with open('selected_routes.json', 'a') as f:
+            f.write(json.dumps(selected_route) + '\n')
+        
+        return jsonify({
+            "message": "Route saved successfully",
+            "route_id": route_id,
+            "status": "success"
+        }), 200
+        
+    except Exception as e:
+        return jsonify({"error": "Failed to save route: " + str(e)}), 500
+
 if __name__ == '__main__':
     # Make sure data directory exists
     if not os.path.exists('data'):
