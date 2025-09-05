@@ -55,13 +55,30 @@ public class SecurityConfig {
                                 "/oauth2/**",
                                 "/login/oauth2/**",
                                 "/error",
-                                "/favicon.ico",
-                                "*"
+                                "/favicon.ico"
                         ).permitAll()
 
-                        // 그 외 공개/인증 정책은 프로젝트에 맞게 조정
-                        //.requestMatchers("/api/auth/**", "/public/**").permitAll()
-                        //.anyRequest().authenticated()
+                        // Swagger UI 허용
+                        .requestMatchers(
+                                "/swagger-ui/**", 
+                                "/v3/api-docs/**",
+                                "/swagger-resources/**",
+                                "/webjars/**"
+                        ).permitAll()
+
+                        // 인증 관련 API 허용
+                        .requestMatchers("/api/auth/**").permitAll()
+
+                        // 신고 API 중 전체 목록과 상세 조회는 공개
+                        .requestMatchers(HttpMethod.GET, "/api/hazards/all", "/api/hazards/{id}").permitAll()
+                        
+                        // 나머지 신고 API는 인증 필요
+                        .requestMatchers("/api/hazards/**").authenticated()
+
+                        // 기타 API들도 인증 필요로 설정 (필요에 따라 조정)
+                        .requestMatchers("/api/**").authenticated()
+                        
+                        // 나머지는 허용
                         .anyRequest().permitAll()
                 )
 

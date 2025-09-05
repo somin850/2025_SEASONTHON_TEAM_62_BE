@@ -33,7 +33,12 @@ public enum ExceptionType {
     UNAUTHORIZED_USER(UNAUTHORIZED, "U005","로그인 되지 않은 사용자"),
     
     // favorite
-    FAVORITE_NOT_FOUND(NOT_FOUND, "F001", "존재하지 않는 즐겨찾기");
+    FAVORITE_NOT_FOUND(NOT_FOUND, "F001", "존재하지 않는 즐겨찾기"),
+
+    // report
+    REPORT_NOT_FOUND(NOT_FOUND, "R001", "존재하지 않는 신고"),
+    REPORT_ACCESS_DENIED(FORBIDDEN, "R002", "신고에 대한 접근 권한이 없습니다"),
+    REPORT_ALREADY_PROCESSED(CONFLICT, "R003", "이미 처리된 신고입니다");
 
     private final HttpStatus status;
     private final String code;
