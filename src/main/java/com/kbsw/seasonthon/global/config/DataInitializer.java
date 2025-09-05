@@ -11,15 +11,26 @@ import com.kbsw.seasonthon.report.entity.Report;
 import com.kbsw.seasonthon.report.enums.ReportStatus;
 import com.kbsw.seasonthon.report.enums.TargetType;
 import com.kbsw.seasonthon.report.repository.ReportRepository;
+import com.kbsw.seasonthon.running.entity.RunningRecord;
+import com.kbsw.seasonthon.running.repository.RunningRecordRepository;
 import com.kbsw.seasonthon.security.jwt.enums.Role;
 import com.kbsw.seasonthon.user.entity.User;
 import com.kbsw.seasonthon.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
+import com.kbsw.seasonthon.security.jwt.util.JwtTokenProvider;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -35,7 +46,9 @@ public class DataInitializer implements CommandLineRunner {
     private final CrewRepository crewRepository;
     private final CrewParticipantRepository crewParticipantRepository;
     private final ReportRepository reportRepository;
+    private final RunningRecordRepository runningRecordRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Override
     public void run(String... args) throws Exception {
@@ -46,6 +59,15 @@ public class DataInitializer implements CommandLineRunner {
         } else {
             log.info("시드 데이터가 이미 존재합니다. 초기화를 건너뜁니다.");
         }
+        
+        // 러닝 데이터는 항상 생성 (테스트용)
+        log.info("=== 러닝 더미 데이터 생성 시작 ===");
+        createTestRunningRecordsForExistingUsers();
+        log.info("=== 러닝 더미 데이터 생성 완료 ===");
+        
+        // 개발용 자동 Access Token 생성 및 테스트
+        log.info("=== 개발용 자동 Access Token 생성 및 테스트 ===");
+        generateAndTestWithAutoToken();
     }
 
     private void initializeTestData() {
@@ -60,6 +82,9 @@ public class DataInitializer implements CommandLineRunner {
         
         // 4. 신고 테스트 데이터 생성
         createTestReports(testUsers);
+        
+        // 5. 러닝 기록 테스트 데이터 생성 (실제 DB 유저 기준) - 항상 실행
+        createTestRunningRecordsForExistingUsers();
     }
 
     private List<User> createTestUsers() {
@@ -918,5 +943,617 @@ public class DataInitializer implements CommandLineRunner {
         
         reportRepository.saveAll(reports);
         log.info("신고 테스트 데이터 {} 개 생성 완료", reports.size());
+    }
+
+    private void createTestRunningRecordsForExistingUsers() {
+        log.info("실제 DB 유저들을 기준으로 러닝 기록 테스트 데이터 생성 중...");
+        
+        // DB에서 모든 유저 조회
+        List<User> existingUsers = userRepository.findAll();
+        if (existingUsers.isEmpty()) {
+            log.warn("DB에 유저가 없습니다. 러닝 기록 데이터를 생성할 수 없습니다.");
+            return;
+        }
+        
+        log.info("DB에서 {} 명의 유저를 찾았습니다.", existingUsers.size());
+        
+        // 기존 러닝 기록 삭제 (테스트용)
+        runningRecordRepository.deleteAll();
+        log.info("기존 러닝 기록을 모두 삭제했습니다.");
+        
+        // admin 사용자 찾기
+        User adminUser = existingUsers.stream()
+            .filter(user -> "admin".equals(user.getUsername()))
+            .findFirst()
+            .orElse(null);
+        
+        if (adminUser == null) {
+            log.warn("admin 사용자를 찾을 수 없습니다. 첫 번째 사용자로 대체합니다.");
+            adminUser = existingUsers.get(0);
+        }
+        
+        log.info("admin 사용자 확인: ID={}, Username={}", adminUser.getId(), adminUser.getUsername());
+        
+        // 각 유저별로 러닝 기록 생성
+        List<RunningRecord> runningRecords = new ArrayList<>();
+        
+        for (int i = 0; i < existingUsers.size(); i++) {
+            User user = existingUsers.get(i);
+            log.info("유저 {} (ID: {})의 러닝 기록 생성 중...", user.getNickname(), user.getId());
+            
+            // admin 사용자에게는 더 많은 데이터 생성
+            int recordCount = "admin".equals(user.getUsername()) ? 10 : (3 + (i % 3));
+            
+            for (int j = 0; j < recordCount; j++) {
+                RunningRecord record = createRandomRunningRecord(user, j);
+                runningRecords.add(record);
+            }
+        }
+        
+        runningRecordRepository.saveAll(runningRecords);
+        log.info("러닝 기록 테스트 데이터 {} 개 생성 완료", runningRecords.size());
+    }
+    
+    private RunningRecord createRandomRunningRecord(User user, int index) {
+        // 다양한 러닝 데이터 생성
+        double[] distances = {2.5, 3.8, 5.2, 7.1, 10.0, 12.5, 15.0};
+        int[] durations = {15, 25, 32, 45, 60, 75, 90};
+        String[] paces = {"5'30\"/km", "6'00\"/km", "6'30\"/km", "7'00\"/km", "7'30\"/km"};
+        String[] weathers = {"맑음", "흐림", "비", "눈", "바람"};
+        String[] notes = {
+            "오늘은 기분이 좋았다!",
+            "힘들었지만 끝까지 완주했다.",
+            "친구와 함께 달렸다.",
+            "새로운 코스를 시도해봤다.",
+            "체력이 늘고 있는 것 같다.",
+            "스트레스 해소에 도움이 되었다.",
+            "날씨가 좋아서 즐거웠다."
+        };
+        
+        double distance = distances[index % distances.length];
+        int duration = durations[index % durations.length];
+        String pace = paces[index % paces.length];
+        String bestPace = paces[(index + 1) % paces.length];
+        String weather = weathers[index % weathers.length];
+        String note = notes[index % notes.length];
+        
+        LocalDateTime startTime = LocalDateTime.now()
+            .minusDays(index * 2 + 1)
+            .withHour(17 + (index % 4))
+            .withMinute(30 + (index * 10) % 30);
+        
+        LocalDateTime endTime = startTime.plusMinutes(duration);
+        
+        return RunningRecord.builder()
+            .user(user)
+            .distanceKm(distance)
+            .durationMinutes(duration)
+            .pace(pace)
+            .bestPace(bestPace)
+            .startTime(startTime)
+            .endTime(endTime)
+            .weather(weather)
+            .notes(note)
+            .routeData(String.format("{\"waypoints\":[{\"lat\":36.3504,\"lng\":127.3845},{\"lat\":36.3514,\"lng\":127.3855}]}"))
+            .build();
+    }
+
+    private void createTestRunningRecords(List<User> users) {
+        log.info("러닝 기록 테스트 데이터 생성 중...");
+        
+        List<RunningRecord> runningRecords = Arrays.asList(
+            // 취준러너김의 러닝 기록들
+            RunningRecord.builder()
+                .user(users.get(0)) // 취준러너김
+                .distanceKm(5.2)
+                .durationMinutes(32)
+                .pace("6'09\"/km")
+                .bestPace("5'45\"/km")
+                .startTime(LocalDateTime.now().minusDays(1).withHour(18).withMinute(30))
+                .endTime(LocalDateTime.now().minusDays(1).withHour(19).withMinute(2))
+                .weather("맑음")
+                .notes("취업 스트레스 해소를 위한 러닝. 기분이 좋아졌다!")
+                .routeData("{\"waypoints\":[{\"lat\":36.3504,\"lng\":127.3845},{\"lat\":36.3514,\"lng\":127.3855}]}")
+                .build(),
+                
+            RunningRecord.builder()
+                .user(users.get(0)) // 취준러너김
+                .distanceKm(3.8)
+                .durationMinutes(25)
+                .pace("6'35\"/km")
+                .bestPace("6'10\"/km")
+                .startTime(LocalDateTime.now().minusDays(3).withHour(19).withMinute(0))
+                .endTime(LocalDateTime.now().minusDays(3).withHour(19).withMinute(25))
+                .weather("흐림")
+                .notes("면접 준비로 힘들었는데 러닝으로 힐링")
+                .routeData("{\"waypoints\":[{\"lat\":36.3504,\"lng\":127.3845}]}")
+                .build(),
+                
+            RunningRecord.builder()
+                .user(users.get(0)) // 취준러너김
+                .distanceKm(7.1)
+                .durationMinutes(45)
+                .pace("6'20\"/km")
+                .bestPace("5'55\"/km")
+                .startTime(LocalDateTime.now().minusDays(7).withHour(17).withMinute(0))
+                .endTime(LocalDateTime.now().minusDays(7).withHour(17).withMinute(45))
+                .weather("맑음")
+                .notes("주말 장거리 러닝. 체력이 늘고 있는 것 같다!")
+                .routeData("{\"waypoints\":[{\"lat\":36.3504,\"lng\":127.3845},{\"lat\":36.3514,\"lng\":127.3855},{\"lat\":36.3524,\"lng\":127.3865}]}")
+                .build(),
+
+            // 내성적인박의 러닝 기록들
+            RunningRecord.builder()
+                .user(users.get(1)) // 내성적인박
+                .distanceKm(2.5)
+                .durationMinutes(20)
+                .pace("8'00\"/km")
+                .bestPace("7'30\"/km")
+                .startTime(LocalDateTime.now().minusDays(2).withHour(18).withMinute(30))
+                .endTime(LocalDateTime.now().minusDays(2).withHour(18).withMinute(50))
+                .weather("맑음")
+                .notes("혼자 조용히 달렸다. 부담없이 좋았다.")
+                .routeData("{\"waypoints\":[{\"lat\":35.1595,\"lng\":129.1606}]}")
+                .build(),
+                
+            RunningRecord.builder()
+                .user(users.get(1)) // 내성적인박
+                .distanceKm(4.0)
+                .durationMinutes(32)
+                .pace("8'00\"/km")
+                .bestPace("7'45\"/km")
+                .startTime(LocalDateTime.now().minusDays(5).withHour(17).withMinute(0))
+                .endTime(LocalDateTime.now().minusDays(5).withHour(17).withMinute(32))
+                .weather("흐림")
+                .notes("조금씩 거리를 늘려가고 있다.")
+                .routeData("{\"waypoints\":[{\"lat\":35.1595,\"lng\":129.1606},{\"lat\":35.1605,\"lng\":129.1616}]}")
+                .build(),
+
+            // 대학생조의 러닝 기록들
+            RunningRecord.builder()
+                .user(users.get(2)) // 대학생조
+                .distanceKm(6.0)
+                .durationMinutes(42)
+                .pace("7'00\"/km")
+                .bestPace("6'30\"/km")
+                .startTime(LocalDateTime.now().minusDays(1).withHour(16).withMinute(0))
+                .endTime(LocalDateTime.now().minusDays(1).withHour(16).withMinute(42))
+                .weather("맑음")
+                .notes("친구들과 함께 달렸다. 재미있었다!")
+                .routeData("{\"waypoints\":[{\"lat\":35.8200,\"lng\":128.5400},{\"lat\":35.8210,\"lng\":128.5410}]}")
+                .build(),
+                
+            RunningRecord.builder()
+                .user(users.get(2)) // 대학생조
+                .distanceKm(4.5)
+                .durationMinutes(32)
+                .pace("7'07\"/km")
+                .bestPace("6'45\"/km")
+                .startTime(LocalDateTime.now().minusDays(4).withHour(18).withMinute(0))
+                .endTime(LocalDateTime.now().minusDays(4).withHour(18).withMinute(32))
+                .weather("비")
+                .notes("비가 와서 조심스럽게 달렸다.")
+                .routeData("{\"waypoints\":[{\"lat\":35.8200,\"lng\":128.5400}]}")
+                .build(),
+                
+            RunningRecord.builder()
+                .user(users.get(2)) // 대학생조
+                .distanceKm(8.2)
+                .durationMinutes(58)
+                .pace("7'04\"/km")
+                .bestPace("6'20\"/km")
+                .startTime(LocalDateTime.now().minusDays(10).withHour(15).withMinute(0))
+                .endTime(LocalDateTime.now().minusDays(10).withHour(15).withMinute(58))
+                .weather("맑음")
+                .notes("주말 장거리 러닝. 체력이 많이 늘었다!")
+                .routeData("{\"waypoints\":[{\"lat\":35.8200,\"lng\":128.5400},{\"lat\":35.8210,\"lng\":128.5410},{\"lat\":35.8220,\"lng\":128.5420}]}")
+                .build(),
+
+            // 친화적인이의 러닝 기록들
+            RunningRecord.builder()
+                .user(users.get(3)) // 친화적인이
+                .distanceKm(5.5)
+                .durationMinutes(38)
+                .pace("6'55\"/km")
+                .bestPace("6'20\"/km")
+                .startTime(LocalDateTime.now().minusDays(1).withHour(18).withMinute(0))
+                .endTime(LocalDateTime.now().minusDays(1).withHour(18).withMinute(38))
+                .weather("맑음")
+                .notes("새로운 친구들과 함께 달렸다. 정말 즐거웠다!")
+                .routeData("{\"waypoints\":[{\"lat\":35.1500,\"lng\":126.9100},{\"lat\":35.1510,\"lng\":126.9110}]}")
+                .build(),
+                
+            RunningRecord.builder()
+                .user(users.get(3)) // 친화적인이
+                .distanceKm(3.2)
+                .durationMinutes(24)
+                .pace("7'30\"/km")
+                .bestPace("7'00\"/km")
+                .startTime(LocalDateTime.now().minusDays(3).withHour(19).withMinute(0))
+                .endTime(LocalDateTime.now().minusDays(3).withHour(19).withMinute(24))
+                .weather("흐림")
+                .notes("짧지만 즐거운 러닝이었다.")
+                .routeData("{\"waypoints\":[{\"lat\":35.1500,\"lng\":126.9100}]}")
+                .build(),
+
+            // 프리랜서최의 러닝 기록들
+            RunningRecord.builder()
+                .user(users.get(4)) // 프리랜서최
+                .distanceKm(6.8)
+                .durationMinutes(48)
+                .pace("7'04\"/km")
+                .bestPace("6'30\"/km")
+                .startTime(LocalDateTime.now().minusDays(2).withHour(16).withMinute(0))
+                .endTime(LocalDateTime.now().minusDays(2).withHour(16).withMinute(48))
+                .weather("맑음")
+                .notes("집에만 있어서 답답했는데 러닝으로 스트레스 해소!")
+                .routeData("{\"waypoints\":[{\"lat\":35.8242,\"lng\":127.1480},{\"lat\":35.8252,\"lng\":127.1490}]}")
+                .build(),
+                
+            RunningRecord.builder()
+                .user(users.get(4)) // 프리랜서최
+                .distanceKm(4.3)
+                .durationMinutes(32)
+                .pace("7'26\"/km")
+                .bestPace("7'00\"/km")
+                .startTime(LocalDateTime.now().minusDays(6).withHour(17).withMinute(30))
+                .endTime(LocalDateTime.now().minusDays(6).withHour(18).withMinute(2))
+                .weather("비")
+                .notes("비가 와서 조심스럽게 달렸다.")
+                .routeData("{\"waypoints\":[{\"lat\":35.8242,\"lng\":127.1480}]}")
+                .build(),
+
+            // 러닝초보강의 러닝 기록들
+            RunningRecord.builder()
+                .user(users.get(5)) // 러닝초보강
+                .distanceKm(1.5)
+                .durationMinutes(15)
+                .pace("10'00\"/km")
+                .bestPace("9'30\"/km")
+                .startTime(LocalDateTime.now().minusDays(1).withHour(15).withMinute(0))
+                .endTime(LocalDateTime.now().minusDays(1).withHour(15).withMinute(15))
+                .weather("맑음")
+                .notes("처음 달려봤는데 생각보다 힘들었다. 하지만 재미있었다!")
+                .routeData("{\"waypoints\":[{\"lat\":36.6358,\"lng\":127.4916}]}")
+                .build(),
+                
+            RunningRecord.builder()
+                .user(users.get(5)) // 러닝초보강
+                .distanceKm(2.0)
+                .durationMinutes(18)
+                .pace("9'00\"/km")
+                .bestPace("8'30\"/km")
+                .startTime(LocalDateTime.now().minusDays(4).withHour(16).withMinute(0))
+                .endTime(LocalDateTime.now().minusDays(4).withHour(16).withMinute(18))
+                .weather("맑음")
+                .notes("조금씩 거리를 늘려가고 있다. 자신감이 생긴다!")
+                .routeData("{\"waypoints\":[{\"lat\":36.6358,\"lng\":127.4916},{\"lat\":36.6368,\"lng\":127.4926}]}")
+                .build(),
+
+            // 사교적인정의 러닝 기록들
+            RunningRecord.builder()
+                .user(users.get(6)) // 사교적인정
+                .distanceKm(7.5)
+                .durationMinutes(56)
+                .pace("7'28\"/km")
+                .bestPace("6'45\"/km")
+                .startTime(LocalDateTime.now().minusDays(1).withHour(19).withMinute(30))
+                .endTime(LocalDateTime.now().minusDays(1).withHour(20).withMinute(26))
+                .weather("맑음")
+                .notes("친구들과 함께 달리고 맥주도 마셨다! 정말 즐거웠다!")
+                .routeData("{\"waypoints\":[{\"lat\":36.8151,\"lng\":127.1139},{\"lat\":36.8161,\"lng\":127.1149}]}")
+                .build(),
+                
+            RunningRecord.builder()
+                .user(users.get(6)) // 사교적인정
+                .distanceKm(5.0)
+                .durationMinutes(38)
+                .pace("7'36\"/km")
+                .bestPace("7'00\"/km")
+                .startTime(LocalDateTime.now().minusDays(5).withHour(18).withMinute(0))
+                .endTime(LocalDateTime.now().minusDays(5).withHour(18).withMinute(38))
+                .weather("흐림")
+                .notes("에너지 넘치는 러닝이었다!")
+                .routeData("{\"waypoints\":[{\"lat\":36.8151,\"lng\":127.1139}]}")
+                .build(),
+
+            // 외로운윤의 러닝 기록들
+            RunningRecord.builder()
+                .user(users.get(7)) // 외로운윤
+                .distanceKm(4.0)
+                .durationMinutes(32)
+                .pace("8'00\"/km")
+                .bestPace("7'30\"/km")
+                .startTime(LocalDateTime.now().minusDays(2).withHour(18).withMinute(0))
+                .endTime(LocalDateTime.now().minusDays(2).withHour(18).withMinute(32))
+                .weather("맑음")
+                .notes("혼자 달렸지만 마음이 편안해졌다.")
+                .routeData("{\"waypoints\":[{\"lat\":35.2281,\"lng\":128.6811}]}")
+                .build(),
+                
+            RunningRecord.builder()
+                .user(users.get(7)) // 외로운윤
+                .distanceKm(3.5)
+                .durationMinutes(28)
+                .pace("8'00\"/km")
+                .bestPace("7'45\"/km")
+                .startTime(LocalDateTime.now().minusDays(6).withHour(17).withMinute(30))
+                .endTime(LocalDateTime.now().minusDays(6).withHour(17).withMinute(58))
+                .weather("흐림")
+                .notes("조용한 시간이었다.")
+                .routeData("{\"waypoints\":[{\"lat\":35.2281,\"lng\":128.6811},{\"lat\":35.2291,\"lng\":128.6821}]}")
+                .build(),
+
+            // 직장인한의 러닝 기록들
+            RunningRecord.builder()
+                .user(users.get(8)) // 직장인한
+                .distanceKm(5.8)
+                .durationMinutes(45)
+                .pace("7'45\"/km")
+                .bestPace("7'00\"/km")
+                .startTime(LocalDateTime.now().minusDays(1).withHour(19).withMinute(0))
+                .endTime(LocalDateTime.now().minusDays(1).withHour(19).withMinute(45))
+                .weather("맑음")
+                .notes("하루 종일 일한 피로가 다 사라졌다!")
+                .routeData("{\"waypoints\":[{\"lat\":36.0190,\"lng\":129.3650},{\"lat\":36.0200,\"lng\":129.3660}]}")
+                .build(),
+                
+            RunningRecord.builder()
+                .user(users.get(8)) // 직장인한
+                .distanceKm(4.2)
+                .durationMinutes(32)
+                .pace("7'37\"/km")
+                .bestPace("7'15\"/km")
+                .startTime(LocalDateTime.now().minusDays(4).withHour(18).withMinute(30))
+                .endTime(LocalDateTime.now().minusDays(4).withHour(19).withMinute(2))
+                .weather("흐림")
+                .notes("직장 스트레스 해소에 정말 좋다.")
+                .routeData("{\"waypoints\":[{\"lat\":36.0190,\"lng\":129.3650}]}")
+                .build(),
+
+            // 운동초보송의 러닝 기록들
+            RunningRecord.builder()
+                .user(users.get(9)) // 운동초보송
+                .distanceKm(1.0)
+                .durationMinutes(10)
+                .pace("10'00\"/km")
+                .bestPace("9'30\"/km")
+                .startTime(LocalDateTime.now().minusDays(2).withHour(16).withMinute(0))
+                .endTime(LocalDateTime.now().minusDays(2).withHour(16).withMinute(10))
+                .weather("맑음")
+                .notes("운동이라곤 체육시간 이후 처음! 정말 힘들었다.")
+                .routeData("{\"waypoints\":[{\"lat\":35.1797,\"lng\":128.1076}]}")
+                .build(),
+                
+            RunningRecord.builder()
+                .user(users.get(9)) // 운동초보송
+                .distanceKm(1.5)
+                .durationMinutes(14)
+                .pace("9'20\"/km")
+                .bestPace("8'45\"/km")
+                .startTime(LocalDateTime.now().minusDays(5).withHour(15).withMinute(30))
+                .endTime(LocalDateTime.now().minusDays(5).withHour(15).withMinute(44))
+                .weather("맑음")
+                .notes("조금씩 나아지고 있다. 자신감이 생긴다!")
+                .routeData("{\"waypoints\":[{\"lat\":35.1797,\"lng\":128.1076},{\"lat\":35.1807,\"lng\":128.1086}]}")
+                .build(),
+
+            // 조용한오의 러닝 기록들
+            RunningRecord.builder()
+                .user(users.get(10)) // 조용한오
+                .distanceKm(4.8)
+                .durationMinutes(38)
+                .pace("7'55\"/km")
+                .bestPace("7'20\"/km")
+                .startTime(LocalDateTime.now().minusDays(1).withHour(17).withMinute(30))
+                .endTime(LocalDateTime.now().minusDays(1).withHour(18).withMinute(8))
+                .weather("맑음")
+                .notes("조용히 달렸다. 자연스럽게 친해질 수 있을 것 같다.")
+                .routeData("{\"waypoints\":[{\"lat\":34.8853,\"lng\":127.5095},{\"lat\":34.8863,\"lng\":127.5105}]}")
+                .build(),
+                
+            RunningRecord.builder()
+                .user(users.get(10)) // 조용한오
+                .distanceKm(3.2)
+                .durationMinutes(26)
+                .pace("8'07\"/km")
+                .bestPace("7'45\"/km")
+                .startTime(LocalDateTime.now().minusDays(4).withHour(18).withMinute(0))
+                .endTime(LocalDateTime.now().minusDays(4).withHour(18).withMinute(26))
+                .weather("흐림")
+                .notes("천천히 달렸다.")
+                .routeData("{\"waypoints\":[{\"lat\":34.8853,\"lng\":127.5095}]}")
+                .build(),
+
+            // 의욕적인임의 러닝 기록들
+            RunningRecord.builder()
+                .user(users.get(11)) // 의욕적인임
+                .distanceKm(6.5)
+                .durationMinutes(50)
+                .pace("7'40\"/km")
+                .bestPace("6'45\"/km")
+                .startTime(LocalDateTime.now().minusDays(1).withHour(19).withMinute(0))
+                .endTime(LocalDateTime.now().minusDays(1).withHour(19).withMinute(50))
+                .weather("맑음")
+                .notes("새로운 도전! 목표를 세우고 달성해나가고 있다!")
+                .routeData("{\"waypoints\":[{\"lat\":34.7881,\"lng\":126.3925},{\"lat\":34.7891,\"lng\":126.3935}]}")
+                .build(),
+                
+            RunningRecord.builder()
+                .user(users.get(11)) // 의욕적인임
+                .distanceKm(5.0)
+                .durationMinutes(38)
+                .pace("7'36\"/km")
+                .bestPace("7'00\"/km")
+                .startTime(LocalDateTime.now().minusDays(3).withHour(18).withMinute(30))
+                .endTime(LocalDateTime.now().minusDays(3).withHour(19).withMinute(8))
+                .weather("맑음")
+                .notes("동기부여가 되는 러닝이었다!")
+                .routeData("{\"waypoints\":[{\"lat\":34.7881,\"lng\":126.3925}]}")
+                .build(),
+
+            // 졸업생남의 러닝 기록들
+            RunningRecord.builder()
+                .user(users.get(12)) // 졸업생남
+                .distanceKm(5.2)
+                .durationMinutes(42)
+                .pace("8'05\"/km")
+                .bestPace("7'30\"/km")
+                .startTime(LocalDateTime.now().minusDays(2).withHour(18).withMinute(30))
+                .endTime(LocalDateTime.now().minusDays(2).withHour(19).withMinute(12))
+                .weather("맑음")
+                .notes("갓 졸업한 사회초년생! 새로운 환경에 적응하며 함께 성장하고 있다.")
+                .routeData("{\"waypoints\":[{\"lat\":35.9674,\"lng\":126.7188},{\"lat\":35.9684,\"lng\":126.7198}]}")
+                .build(),
+                
+            RunningRecord.builder()
+                .user(users.get(12)) // 졸업생남
+                .distanceKm(4.0)
+                .durationMinutes(32)
+                .pace("8'00\"/km")
+                .bestPace("7'30\"/km")
+                .startTime(LocalDateTime.now().minusDays(5).withHour(17).withMinute(0))
+                .endTime(LocalDateTime.now().minusDays(5).withHour(17).withMinute(32))
+                .weather("흐림")
+                .notes("편한 분위기에서 달렸다.")
+                .routeData("{\"waypoints\":[{\"lat\":35.9674,\"lng\":126.7188}]}")
+                .build(),
+
+            // 새내기서의 러닝 기록들
+            RunningRecord.builder()
+                .user(users.get(13)) // 새내기서
+                .distanceKm(4.6)
+                .durationMinutes(36)
+                .pace("7'50\"/km")
+                .bestPace("7'15\"/km")
+                .startTime(LocalDateTime.now().minusDays(1).withHour(16).withMinute(30))
+                .endTime(LocalDateTime.now().minusDays(1).withHour(17).withMinute(6))
+                .weather("맑음")
+                .notes("새로운 시작! 설레는 마음으로 달렸다!")
+                .routeData("{\"waypoints\":[{\"lat\":35.9907,\"lng\":126.9624},{\"lat\":35.9917,\"lng\":126.9634}]}")
+                .build(),
+                
+            RunningRecord.builder()
+                .user(users.get(13)) // 새내기서
+                .distanceKm(3.5)
+                .durationMinutes(28)
+                .pace("8'00\"/km")
+                .bestPace("7'30\"/km")
+                .startTime(LocalDateTime.now().minusDays(4).withHour(15).withMinute(0))
+                .endTime(LocalDateTime.now().minusDays(4).withHour(15).withMinute(28))
+                .weather("맑음")
+                .notes("적응해나가고 있다.")
+                .routeData("{\"waypoints\":[{\"lat\":35.9907,\"lng\":126.9624}]}")
+                .build()
+        );
+        
+        runningRecordRepository.saveAll(runningRecords);
+        log.info("러닝 기록 테스트 데이터 {} 개 생성 완료", runningRecords.size());
+    }
+    
+    /**
+     * 개발용 자동 Access Token 생성 및 API 테스트
+     */
+    private void generateAndTestWithAutoToken() {
+        try {
+            // 1. admin 사용자 조회
+            User adminUser = userRepository.findByUsername("admin")
+                .orElseThrow(() -> new RuntimeException("admin 사용자를 찾을 수 없습니다."));
+            
+            log.info("🔑 admin 사용자 조회 완료: ID={}, Username={}", adminUser.getId(), adminUser.getUsername());
+            
+            // 2. JWT Access Token 자동 생성
+            String accessToken = jwtTokenProvider.generateAccessToken(adminUser.getId());
+            log.info("🎫 자동 생성된 Access Token: {}", accessToken);
+            
+            // 3. 전역 변수로 Access Token 저장 (개발용)
+            System.setProperty("DEV_ACCESS_TOKEN", accessToken);
+            log.info("💾 개발용 Access Token이 시스템 프로퍼티에 저장되었습니다.");
+            
+            // 4. RestTemplate 설정
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + accessToken);
+            headers.set("Content-Type", "application/json");
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            
+            // 5. API 테스트 실행
+            testAllApisWithToken(restTemplate, entity, accessToken);
+            
+            log.info("🎉 개발용 자동 Access Token 생성 및 테스트 완료!");
+            log.info("📋 사용 가능한 Access Token: {}", accessToken);
+            log.info("💡 이 토큰을 Swagger UI나 Postman에서 사용하세요!");
+            log.info("🔧 시스템 프로퍼티 'DEV_ACCESS_TOKEN'에서도 확인 가능합니다.");
+            
+        } catch (Exception e) {
+            log.error("❌ 자동 Access Token 생성 및 테스트 중 오류 발생: {}", e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * 생성된 Access Token으로 모든 API 테스트
+     */
+    private void testAllApisWithToken(RestTemplate restTemplate, HttpEntity<String> entity, String accessToken) {
+        String baseUrl = "http://localhost:8080";
+        
+        // 1. 사용자 정보 조회 테스트
+        testApi(restTemplate, entity, baseUrl + "/api/user/me", "사용자 정보 조회");
+        
+        // 2. 러닝 통계 조회 테스트
+        testApi(restTemplate, entity, baseUrl + "/api/running/stats", "러닝 통계 조회");
+        
+        // 3. 크루 목록 조회 테스트
+        testApi(restTemplate, entity, baseUrl + "/api/crews?page=0&size=5", "크루 목록 조회");
+        
+        // 4. 즐겨찾기 조회 테스트
+        testApi(restTemplate, entity, baseUrl + "/api/favorites?userId=" + getAdminUserId(), "즐겨찾기 조회");
+        
+        // 5. 경로 추천 테스트 (POST)
+        testRouteRecommendation(restTemplate, accessToken);
+    }
+    
+    /**
+     * 개별 API 테스트
+     */
+    private void testApi(RestTemplate restTemplate, HttpEntity<String> entity, String url, String apiName) {
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            log.info("✅ {} 성공: {}", apiName, response.getBody().substring(0, Math.min(100, response.getBody().length())) + "...");
+        } catch (Exception e) {
+            log.warn("⚠️ {} 실패: {}", apiName, e.getMessage());
+        }
+    }
+    
+    /**
+     * 경로 추천 API 테스트 (POST)
+     */
+    private void testRouteRecommendation(RestTemplate restTemplate, String accessToken) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + accessToken);
+            headers.set("Content-Type", "application/json");
+            
+            String requestBody = "{\"startLat\":35.9674,\"startLng\":126.7188,\"endLat\":35.9907,\"endLng\":126.9624,\"distance\":5.0}";
+            HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
+            
+            ResponseEntity<String> response = restTemplate.exchange(
+                "http://localhost:8080/api/route-single", 
+                HttpMethod.POST, 
+                entity, 
+                String.class
+            );
+            log.info("✅ 경로 추천 성공: {}", response.getBody().substring(0, Math.min(100, response.getBody().length())) + "...");
+        } catch (Exception e) {
+            log.warn("⚠️ 경로 추천 실패: {}", e.getMessage());
+        }
+    }
+    
+    /**
+     * admin 사용자 ID 조회
+     */
+    private Long getAdminUserId() {
+        return userRepository.findByUsername("admin")
+            .map(User::getId)
+            .orElse(1L);
     }
 }

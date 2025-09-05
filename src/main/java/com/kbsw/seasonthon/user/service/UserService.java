@@ -3,6 +3,8 @@ package com.kbsw.seasonthon.user.service;
 
 import com.kbsw.seasonthon.global.base.response.exception.BusinessException;
 import com.kbsw.seasonthon.global.base.response.exception.ExceptionType;
+import com.kbsw.seasonthon.running.dto.response.RunningStatsResponse;
+import com.kbsw.seasonthon.running.service.RunningRecordService;
 import com.kbsw.seasonthon.user.dto.request.SignUpRequestDto;
 import com.kbsw.seasonthon.user.dto.response.UserResponseDto;
 import com.kbsw.seasonthon.user.entity.User;
@@ -19,6 +21,7 @@ public class UserService{
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RunningRecordService runningRecordService;
 
 
 
@@ -43,8 +46,10 @@ public class UserService{
                 .findById(userId)
                 .orElseThrow(()-> new BusinessException(ExceptionType.USER_NOT_FOUND));
 
+        // 러닝 통계 조회
+        RunningStatsResponse runningStats = runningRecordService.getRunningStats(user);
 
-        return UserResponseDto.fromEntity(user);
+        return UserResponseDto.fromEntityWithStats(user, runningStats);
     }
 
 

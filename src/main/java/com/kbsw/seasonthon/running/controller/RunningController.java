@@ -1,4 +1,4 @@
-package com.kbsw.seasonthon.report.controller;
+package com.kbsw.seasonthon.running.controller;
 
 import com.kbsw.seasonthon.global.base.response.ResponseBody;
 import com.kbsw.seasonthon.global.base.response.ResponseUtil;
@@ -7,12 +7,15 @@ import com.kbsw.seasonthon.report.dto.request.ReportStatusUpdateRequest;
 import com.kbsw.seasonthon.report.dto.response.ReportListResponse;
 import com.kbsw.seasonthon.report.dto.response.ReportResponse;
 import com.kbsw.seasonthon.report.service.ReportService;
+import com.kbsw.seasonthon.running.dto.response.RunningStatsResponse;
+import com.kbsw.seasonthon.running.service.RunningRecordService;
 import com.kbsw.seasonthon.security.oauth2.principal.PrincipalDetails;
 import com.kbsw.seasonthon.user.entity.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,26 +28,48 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/hazards")
+@RequestMapping("/api/running")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "Report API", description = "신고 관련 API")
-public class ReportController {
+@Tag(name = "Running API", description = "러닝 기록 및 통계 관련 API")
+public class RunningController {
 
     private final ReportService reportService;
+    private final RunningRecordService runningRecordService;
     
     /**
      * 테스트 엔드포인트
      */
     @GetMapping("/test")
-    @Operation(summary = "테스트", description = "ReportController 테스트")
+    @Operation(summary = "테스트", description = "RunningController 테스트")
     public ResponseEntity<ResponseBody<String>> test() {
         try {
-            return ResponseEntity.ok(ResponseUtil.createSuccessResponse("ReportController is working!"));
+            return ResponseEntity.ok(ResponseUtil.createSuccessResponse("RunningController is working!"));
         } catch (Exception e) {
-            log.error("ReportController 테스트 오류: {}", e.getMessage(), e);
-            return ResponseEntity.ok(ResponseUtil.createErrorResponse("C001", "ReportController 오류: " + e.getMessage()));
+            log.error("RunningController 테스트 오류: {}", e.getMessage(), e);
+            return ResponseEntity.ok(ResponseUtil.createSuccessResponse("RunningController 오류: " + e.getMessage()));
         }
+    }
+
+    /**
+     * 러닝 통계 조회
+     */
+    @GetMapping("/stats")
+    @Operation(summary = "러닝 통계 조회", description = "현재 사용자의 러닝 통계를 조회합니다.")
+    public ResponseEntity<ResponseBody<RunningStatsResponse>> getRunningStats(
+            @AuthenticationPrincipal PrincipalDetails principal) {
+        
+        if (principal == null || principal.getUser() == null) {
+            log.warn("인증되지 않은 러닝 통계 조회 요청");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        log.info("러닝 통계 조회 API 호출 - 사용자: {}", principal.getUser().getId());
+        
+        User user = principal.getUser();
+        RunningStatsResponse stats = runningRecordService.getRunningStats(user);
+        
+        return ResponseEntity.ok(ResponseUtil.createSuccessResponse(stats));
     }
 
     /**

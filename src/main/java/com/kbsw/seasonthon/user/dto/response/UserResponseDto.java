@@ -1,5 +1,6 @@
 package com.kbsw.seasonthon.user.dto.response;
 
+import com.kbsw.seasonthon.running.dto.response.RunningStatsResponse;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,6 +16,7 @@ public class UserResponseDto {
     private String username;
     private String nickname;
     private String email;
+    private RunningStatsResponse runningStats;  // 러닝 통계 추가
 
     public static UserResponseDto fromEntity(User user) {
         return UserResponseDto.builder()
@@ -22,6 +24,16 @@ public class UserResponseDto {
                 .username(user.getUsername())
                 .nickname(user.getNickname())
                 .email(user.getEmail())
+                .build();
+    }
+    
+    public static UserResponseDto fromEntityWithStats(User user, RunningStatsResponse runningStats) {
+        return UserResponseDto.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .nickname(user.getNickname())
+                .email(user.getEmail())
+                .runningStats(runningStats)
                 .build();
     }
 }
