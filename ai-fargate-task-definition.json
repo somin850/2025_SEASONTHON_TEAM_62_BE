@@ -1,0 +1,31 @@
+{
+  "family": "seasonthon-ai-fargate",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::883105811636:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "seasonthon-ai",
+      "image": "883105811636.dkr.ecr.ap-northeast-2.amazonaws.com/seasonthon-ai:latest",
+      "portMappings": [
+        {
+          "containerPort": 5000,
+          "protocol": "tcp"
+        }
+      ],
+      "command": ["python", "app.py"],
+      "workingDirectory": "/app/src",
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/seasonthon-ai",
+          "awslogs-region": "ap-northeast-2",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "essential": true
+    }
+  ]
+}

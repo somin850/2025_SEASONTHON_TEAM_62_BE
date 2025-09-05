@@ -8,9 +8,9 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/SeasonThon?useSSL=false&characterEncoding=UTF-8&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
-    username: root
-    password: root 
+    url: jdbc:mysql://seasonthon-mysql.ch2my6wuyfnt.ap-northeast-2.rds.amazonaws.com:3306/SeasonThon?useSSL=false&characterEncoding=UTF-8&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+    username: admin
+    password: SeasonThon2024! 
     hikari:
       minimum-idle: 2
       maximum-pool-size: 10
@@ -19,7 +19,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create-drop   # 테스트용으로 매번 새로 생성
+      ddl-auto: update   # 테스트용으로 매번 새로 생성
     show-sql: true
     defer-datasource-initialization: true
     properties:
@@ -96,3 +96,12 @@ xai:
     key: xai-CmAFeBIaScA6fm4PkNBPYlh8w0GZfrFrvV4gIXzhtBBNkSpFYpvi3TLwXfT16WZZDwVjnfDahjf8Xlw1
   model: grok-3
   base-url: https://api.x.ai/v1
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

@@ -36,7 +36,7 @@ public interface CrewRepository extends JpaRepository<Crew, Long> {
            "AND (:safetyLevel IS NULL OR c.safetyLevel = :safetyLevel) " +
            "AND (:tags IS NULL OR t IN :tags) " +
            "AND (:maxDistance IS NULL OR c.distanceKm <= :maxDistance) " +
-           "AND (:minPace IS NULL OR c.pace <= :minPace) " +
+           "AND (:minPace IS NULL OR c.pace LIKE %:minPace%) " +
            "AND (:startTimeFrom IS NULL OR c.startTime >= :startTimeFrom)")
     Page<Crew> searchCrews(@Param("keyword") String keyword,
                           @Param("startLocation") String startLocation,
@@ -56,3 +56,5 @@ public interface CrewRepository extends JpaRepository<Crew, Long> {
     // 최신 크루 조회
     Page<Crew> findByStatusOrderByCreatedAtDesc(CrewStatus status, Pageable pageable);
 }
+
+

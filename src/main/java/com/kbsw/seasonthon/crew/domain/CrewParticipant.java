@@ -47,3 +47,5 @@ public class CrewParticipant extends BaseEntity {
         return this.status == ParticipantStatus.APPLIED;
     }
 }
+
+

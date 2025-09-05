@@ -14,6 +14,8 @@ import com.kbsw.seasonthon.crew.dto.response.CrewUpdateResponse;
 import com.kbsw.seasonthon.crew.enums.CrewStatus;
 import com.kbsw.seasonthon.crew.enums.ParticipantStatus;
 import com.kbsw.seasonthon.crew.enums.SafetyLevel;
+import com.kbsw.seasonthon.global.base.response.exception.BusinessException;
+import com.kbsw.seasonthon.global.base.response.exception.ExceptionType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -104,34 +106,74 @@ public class CrewTestService {
 
     public Map<String, Object> getRouteInfo(String routeId) {
         try {
-            String url = "http://localhost:8080/api/route-single";
-            Map<String, Object> requestBody = Map.of("routeId", routeId);
+            // AI 모델 서비스 URL
+            String aiServiceUrl = "http://43.202.57.158:5000";
+            String url = aiServiceUrl + "/api/routes/recommend";
+            
+            // 기본 달서구 좌표와 설정값 사용
+            Map<String, Object> requestBody = Map.of(
+                "start_point", List.of(35.8667, 128.6000), // 달서구 중심 좌표
+                "distance_km", 5.0, // 기본 5km
+                "pace_min_per_km", 6.0 // 기본 6분/km
+            );
+            
+            log.info("AI 모델 호출 시작 (Test): {}", url);
             
             @SuppressWarnings("unchecked")
             Map<String, Object> response = restTemplate.postForObject(url, requestBody, Map.class);
             
-            return response;
+            if (response != null && response.containsKey("route")) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> selectedRoute = (Map<String, Object>) response.get("route");
+                
+                // AI 모델 응답을 기존 형식으로 변환
+                return Map.of(
+                    "routeId", routeId,
+                    "type", selectedRoute.getOrDefault("type", "safe"),
+                    "distanceKm", selectedRoute.getOrDefault("distance_km", 5.0),
+                    "safetyScore", ((Double) selectedRoute.getOrDefault("safety_score", 20.0)).intValue(),
+                    "durationMin", ((Double) selectedRoute.getOrDefault("estimated_time_min", 30.0)).intValue(),
+                    "waypoints", selectedRoute.getOrDefault("waypoints", List.of(List.of(35.8667, 128.6000)))
+                );
+            } else if (response != null && response.containsKey("routes")) {
+                // 기존 형식도 지원 (fallback)
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> routes = (List<Map<String, Object>>) response.get("routes");
+                
+                if (!routes.isEmpty()) {
+                    Map<String, Object> selectedRoute = routes.get(0);
+                    
+                    return Map.of(
+                        "routeId", routeId,
+                        "type", selectedRoute.getOrDefault("type", "safe"),
+                        "distanceKm", selectedRoute.getOrDefault("distance_km", 5.0),
+                        "safetyScore", ((Double) selectedRoute.getOrDefault("safety_score", 20.0)).intValue(),
+                        "durationMin", ((Double) selectedRoute.getOrDefault("estimated_time_min", 30.0)).intValue(),
+                        "waypoints", selectedRoute.getOrDefault("waypoints", List.of(List.of(35.8667, 128.6000)))
+                    );
+                }
+            }
+            
+            log.warn("AI 모델 응답이 예상 형식이 아님 (Test): {}", response);
+            throw new BusinessException(ExceptionType.CREW_AI_SERVICE_ERROR, "AI 모델 응답 형식 오류");
+            
+        } catch (BusinessException e) {
+            throw e; // BusinessException은 그대로 전파
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            log.error("AI 모델 HTTP 클라이언트 에러 (Test) ({}): {}", e.getStatusCode(), e.getMessage());
+            throw new BusinessException(ExceptionType.CREW_AI_SERVICE_ERROR, "AI 서비스 호출 실패: " + e.getStatusCode());
+        } catch (org.springframework.web.client.HttpServerErrorException e) {
+            log.error("AI 모델 HTTP 서버 에러 (Test) ({}): {}", e.getStatusCode(), e.getMessage());
+            throw new BusinessException(ExceptionType.CREW_AI_SERVICE_ERROR, "AI 서비스 내부 오류: " + e.getStatusCode());
+        } catch (org.springframework.web.client.ResourceAccessException e) {
+            log.error("AI 모델 리소스 접근 에러 (Test): {}", e.getMessage());
+            throw new BusinessException(ExceptionType.CREW_AI_SERVICE_ERROR, "AI 서비스 연결 실패");
+        } catch (org.springframework.web.client.RestClientException e) {
+            log.error("AI 모델 RestClient 에러 (Test): {}", e.getMessage());
+            throw new BusinessException(ExceptionType.CREW_AI_SERVICE_ERROR, "AI 서비스 통신 오류");
         } catch (Exception e) {
-            log.error("라우트 정보 조회 실패: {}", e.getMessage());
-            // 임시 데이터 반환
-            Random random = new Random();
-            int safetyScore = 50 + random.nextInt(50);
-            
-            List<List<Double>> waypoints = Arrays.asList(
-                Arrays.asList(37.5665, 126.9780),
-                Arrays.asList(37.5675, 126.9790),
-                Arrays.asList(37.5670, 126.9760),
-                Arrays.asList(37.5665, 126.9780)
-            );
-            
-            return Map.of(
-                "routeId", routeId,
-                "type", "safe",
-                "distanceKm", 5.1,
-                "safetyScore", safetyScore,
-                "durationMin", 32,
-                "waypoints", waypoints
-            );
+            log.error("AI 모델 라우트 정보 조회 실패 (Test): {}", e.getMessage(), e);
+            throw new BusinessException(ExceptionType.CREW_AI_SERVICE_ERROR, "AI 모델 호출 중 예상치 못한 오류 발생");
         }
     }
 

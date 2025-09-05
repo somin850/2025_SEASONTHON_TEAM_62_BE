@@ -7,10 +7,23 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.NoHandlerFoundException;
+
+import java.net.SocketTimeoutException;
+import java.util.concurrent.TimeoutException;
 
 import static com.kbsw.seasonthon.global.base.response.ResponseUtil.createFailureResponse;
 
@@ -77,6 +90,143 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(createFailureResponse(ExceptionType.BINDING_ERROR, msg));
+    }
+
+    /* === 추가적인 예외 처리기들 === */
+
+    /** NullPointerException → 500 */
+    @ExceptionHandler(NullPointerException.class)
+    public ResponseEntity<ResponseBody<Void>> handleNullPointer(NullPointerException e) {
+        log.error("NullPointerException: {}", e.getMessage(), e);
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(createFailureResponse(ExceptionType.NULL_POINTER_ERROR));
+    }
+
+    /** ArrayIndexOutOfBoundsException → 400 */
+    @ExceptionHandler(ArrayIndexOutOfBoundsException.class)
+    public ResponseEntity<ResponseBody<Void>> handleArrayIndexOutOfBounds(ArrayIndexOutOfBoundsException e) {
+        log.error("ArrayIndexOutOfBoundsException: {}", e.getMessage(), e);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(createFailureResponse(ExceptionType.ARRAY_INDEX_OUT_OF_BOUNDS_ERROR));
+    }
+
+    /** ClassCastException → 400 */
+    @ExceptionHandler(ClassCastException.class)
+    public ResponseEntity<ResponseBody<Void>> handleClassCast(ClassCastException e) {
+        log.error("ClassCastException: {}", e.getMessage(), e);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(createFailureResponse(ExceptionType.CLASS_CAST_ERROR));
+    }
+
+    /** NumberFormatException → 400 */
+    @ExceptionHandler(NumberFormatException.class)
+    public ResponseEntity<ResponseBody<Void>> handleNumberFormat(NumberFormatException e) {
+        log.error("NumberFormatException: {}", e.getMessage(), e);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(createFailureResponse(ExceptionType.NUMBER_FORMAT_ERROR));
+    }
+
+    /** JSON 처리 에러 → 400 */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ResponseBody<Void>> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
+        log.error("HttpMessageNotReadableException: {}", e.getMessage(), e);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(createFailureResponse(ExceptionType.JSON_PROCESSING_ERROR));
+    }
+
+    /** HTTP 클라이언트 에러 → 502 */
+    @ExceptionHandler(HttpClientErrorException.class)
+    public ResponseEntity<ResponseBody<Void>> handleHttpClientError(HttpClientErrorException e) {
+        log.error("HttpClientErrorException: {}", e.getMessage(), e);
+        return ResponseEntity
+                .status(HttpStatus.BAD_GATEWAY)
+                .body(createFailureResponse(ExceptionType.HTTP_CLIENT_ERROR));
+    }
+
+    /** HTTP 서버 에러 → 502 */
+    @ExceptionHandler(HttpServerErrorException.class)
+    public ResponseEntity<ResponseBody<Void>> handleHttpServerError(HttpServerErrorException e) {
+        log.error("HttpServerErrorException: {}", e.getMessage(), e);
+        return ResponseEntity
+                .status(HttpStatus.BAD_GATEWAY)
+                .body(createFailureResponse(ExceptionType.HTTP_CLIENT_ERROR));
+    }
+
+    /** RestClientException → 502 */
+    @ExceptionHandler(RestClientException.class)
+    public ResponseEntity<ResponseBody<Void>> handleRestClient(RestClientException e) {
+        log.error("RestClientException: {}", e.getMessage(), e);
+        return ResponseEntity
+                .status(HttpStatus.BAD_GATEWAY)
+                .body(createFailureResponse(ExceptionType.HTTP_CLIENT_ERROR));
+    }
+
+    /** 타임아웃 에러 → 408 */
+    @ExceptionHandler({TimeoutException.class, SocketTimeoutException.class})
+    public ResponseEntity<ResponseBody<Void>> handleTimeout(Exception e) {
+        log.error("TimeoutException: {}", e.getMessage(), e);
+        return ResponseEntity
+                .status(HttpStatus.REQUEST_TIMEOUT)
+                .body(createFailureResponse(ExceptionType.TIMEOUT_ERROR));
+    }
+
+    /** 리소스 접근 에러 → 502 */
+    @ExceptionHandler(ResourceAccessException.class)
+    public ResponseEntity<ResponseBody<Void>> handleResourceAccess(ResourceAccessException e) {
+        log.error("ResourceAccessException: {}", e.getMessage(), e);
+        return ResponseEntity
+                .status(HttpStatus.BAD_GATEWAY)
+                .body(createFailureResponse(ExceptionType.HTTP_CLIENT_ERROR));
+    }
+
+    /** 404 Not Found → 404 */
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<ResponseBody<Void>> handleNoHandlerFound(NoHandlerFoundException e) {
+        log.error("NoHandlerFoundException: {}", e.getMessage(), e);
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(createFailureResponse(ExceptionType.RESOURCE_NOT_FOUND_ERROR));
+    }
+
+    /** 405 Method Not Allowed → 405 */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ResponseBody<Void>> handleMethodNotSupported(HttpRequestMethodNotSupportedException e) {
+        log.error("HttpRequestMethodNotSupportedException: {}", e.getMessage(), e);
+        return ResponseEntity
+                .status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(createFailureResponse(ExceptionType.METHOD_NOT_ALLOWED_ERROR));
+    }
+
+    /** 415 Unsupported Media Type → 415 */
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ResponseBody<Void>> handleMediaTypeNotSupported(HttpMediaTypeNotSupportedException e) {
+        log.error("HttpMediaTypeNotSupportedException: {}", e.getMessage(), e);
+        return ResponseEntity
+                .status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                .body(createFailureResponse(ExceptionType.UNSUPPORTED_MEDIA_TYPE_ERROR));
+    }
+
+    /** 필수 파라미터 누락 → 400 */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ResponseBody<Void>> handleMissingParameter(MissingServletRequestParameterException e) {
+        log.error("MissingServletRequestParameterException: {}", e.getMessage(), e);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(createFailureResponse(ExceptionType.ESSENTIAL_FIELD_MISSING_ERROR));
+    }
+
+    /** 파라미터 타입 불일치 → 400 */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ResponseBody<Void>> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
+        log.error("MethodArgumentTypeMismatchException: {}", e.getMessage(), e);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(createFailureResponse(ExceptionType.BINDING_ERROR));
     }
 
     /** 잡히지 않은 나머지 → 500 */

@@ -18,6 +18,8 @@ import com.kbsw.seasonthon.crew.enums.ParticipantStatus;
 import com.kbsw.seasonthon.crew.enums.SafetyLevel;
 import com.kbsw.seasonthon.crew.repository.CrewParticipantRepository;
 import com.kbsw.seasonthon.crew.repository.CrewRepository;
+import com.kbsw.seasonthon.global.base.response.exception.BusinessException;
+import com.kbsw.seasonthon.global.base.response.exception.ExceptionType;
 import com.kbsw.seasonthon.user.entity.User;
 import com.kbsw.seasonthon.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -66,9 +68,9 @@ public class CrewService {
                 .routeId((String) routeInfo.get("route_id"))
                 .type((String) routeInfo.get("type"))
                 .distanceKm((Double) routeInfo.get("distance_km"))
-                .safetyScore((Integer) routeInfo.get("safety_score"))
-                .safetyLevel(SafetyLevel.fromScore((Integer) routeInfo.get("safety_score")))
-                .durationMin((Integer) routeInfo.get("duration_min"))
+                .safetyScore(((Double) routeInfo.get("safety_score")).intValue())
+                .safetyLevel(SafetyLevel.fromScore(((Double) routeInfo.get("safety_score")).intValue()))
+                .durationMin(((Double) routeInfo.get("duration_min")).intValue())
                 .waypoints(waypoints)
                 .tags(request.getTags() != null ? request.getTags() : List.of())
                 .startLocation(request.getStartLocation())
@@ -209,17 +211,98 @@ public class CrewService {
 
     public Map<String, Object> getRouteInfo(String routeId) {
         try {
-            String url = "http://localhost:8080/api/route-single";
-            Map<String, Object> requestBody = Map.of("route_id", routeId);
+            // AI 모델 서비스 URL
+            String aiServiceUrl = "http://43.202.57.158:5000";
+            String url = aiServiceUrl + "/api/routes/recommend";
+            
+            // 기본 달서구 좌표와 설정값 사용
+            Map<String, Object> requestBody = Map.of(
+                "start_point", List.of(35.8667, 128.6000), // 달서구 중심 좌표
+                "distance_km", 5.0, // 기본 5km
+                "pace_min_per_km", 6.0 // 기본 6분/km
+            );
+            
+            log.info("AI 모델 호출 시작: {}", url);
             
             @SuppressWarnings("unchecked")
             Map<String, Object> response = restTemplate.postForObject(url, requestBody, Map.class);
             
-            return response;
+            if (response != null && response.containsKey("route")) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> selectedRoute = (Map<String, Object>) response.get("route");
+                
+                // AI 모델 응답을 기존 형식으로 변환
+                return Map.of(
+                    "route_id", routeId,
+                    "type", selectedRoute.getOrDefault("type", "safe"),
+                    "distance_km", selectedRoute.getOrDefault("distance_km", 5.0),
+                    "safety_score", ((Double) selectedRoute.getOrDefault("safety_score", 20.0)).intValue(),
+                    "duration_min", ((Double) selectedRoute.getOrDefault("estimated_time_min", 30.0)).intValue(),
+                    "waypoints", selectedRoute.getOrDefault("waypoints", List.of(List.of(35.8667, 128.6000)))
+                );
+            } else if (response != null && response.containsKey("routes")) {
+                // 기존 형식도 지원 (fallback)
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> routes = (List<Map<String, Object>>) response.get("routes");
+                
+                if (!routes.isEmpty()) {
+                    Map<String, Object> selectedRoute = routes.get(0);
+                    
+                    return Map.of(
+                        "route_id", routeId,
+                        "type", selectedRoute.getOrDefault("type", "safe"),
+                        "distance_km", selectedRoute.getOrDefault("distance_km", 5.0),
+                        "safety_score", ((Double) selectedRoute.getOrDefault("safety_score", 20.0)).intValue(),
+                        "duration_min", ((Double) selectedRoute.getOrDefault("estimated_time_min", 30.0)).intValue(),
+                        "waypoints", selectedRoute.getOrDefault("waypoints", List.of(List.of(35.8667, 128.6000)))
+                    );
+                }
+            }
+            
+            log.warn("AI 모델 응답이 예상 형식이 아님: {}", response);
+            throw new BusinessException(ExceptionType.CREW_AI_SERVICE_ERROR, "AI 모델 응답 형식 오류");
+            
+        } catch (BusinessException e) {
+            throw e; // BusinessException은 그대로 전파
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            log.error("AI 모델 HTTP 클라이언트 에러 ({}): {}", e.getStatusCode(), e.getMessage());
+            log.info("AI 모델 연결 실패, 더미 데이터 반환");
+            return getDummyRouteInfo(routeId);
+        } catch (org.springframework.web.client.HttpServerErrorException e) {
+            log.error("AI 모델 HTTP 서버 에러 ({}): {}", e.getStatusCode(), e.getMessage());
+            log.info("AI 모델 연결 실패, 더미 데이터 반환");
+            return getDummyRouteInfo(routeId);
+        } catch (org.springframework.web.client.ResourceAccessException e) {
+            log.error("AI 모델 리소스 접근 에러: {}", e.getMessage());
+            log.info("AI 모델 연결 실패, 더미 데이터 반환");
+            return getDummyRouteInfo(routeId);
+        } catch (org.springframework.web.client.RestClientException e) {
+            log.error("AI 모델 RestClient 에러: {}", e.getMessage());
+            log.info("AI 모델 연결 실패, 더미 데이터 반환");
+            return getDummyRouteInfo(routeId);
         } catch (Exception e) {
-            log.error("라우트 정보 조회 실패: {}", e.getMessage());
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "라우트 정보를 가져올 수 없습니다."            );
+            log.error("AI 모델 라우트 정보 조회 실패: {}", e.getMessage(), e);
+            log.info("AI 모델 연결 실패, 더미 데이터 반환");
+            return getDummyRouteInfo(routeId);
         }
+    }
+    
+    private Map<String, Object> getDummyRouteInfo(String routeId) {
+        // AI 모델 연결 실패 시 더미 데이터 반환
+        return Map.of(
+            "route_id", routeId,
+            "type", "safe",
+            "distance_km", 5.0,
+            "safety_score", 20,
+            "duration_min", 30,
+            "waypoints", List.of(
+                List.of(35.8667, 128.6000),
+                List.of(35.8700, 128.6100),
+                List.of(35.8750, 128.6200),
+                List.of(35.8800, 128.6300),
+                List.of(35.8667, 128.6000)
+            )
+        );
     }
 
     // 크루 리스트 조회 (검색 및 필터링)

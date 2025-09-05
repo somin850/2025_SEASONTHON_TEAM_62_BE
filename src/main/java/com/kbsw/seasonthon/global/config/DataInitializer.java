@@ -24,7 +24,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-@Profile("!prod") // 프로덕션 환경에서는 실행하지 않음
+// @Profile("!test") // 모든 환경에서 실행
 public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;

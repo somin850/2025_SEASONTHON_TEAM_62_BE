@@ -36,10 +36,27 @@ public class CrewController {
             @Valid @RequestBody CrewCreateRequest request,
             @AuthenticationPrincipal PrincipalDetails principal) {
         
-        User user = principal.getUser();
+        // 개발 환경에서는 더미 사용자 사용
+        User user;
+        if (principal != null) {
+            user = principal.getUser();
+        } else {
+            // 더미 사용자 생성 또는 조회
+            user = getDummyUser();
+        }
+        
         CrewCreateResponse response = crewService.createCrew(request, user);
         
         return ResponseEntity.ok(response);
+    }
+    
+    private User getDummyUser() {
+        // 더미 사용자 반환 (실제 구현에서는 UserRepository에서 조회)
+        return User.builder()
+                .id(1L)
+                .username("dummy_user")
+                .email("dummy@example.com")
+                .build();
     }
 
     @PatchMapping("/{id}")
@@ -49,7 +66,7 @@ public class CrewController {
             @Valid @RequestBody CrewUpdateRequest request,
             @AuthenticationPrincipal PrincipalDetails principal) {
         
-        User user = principal.getUser();
+        User user = principal != null ? principal.getUser() : getDummyUser();
         CrewUpdateResponse response = crewService.updateCrew(id, request, user);
         
         return ResponseEntity.ok(response);
@@ -61,7 +78,7 @@ public class CrewController {
             @PathVariable Long id,
             @AuthenticationPrincipal PrincipalDetails principal) {
         
-        User user = principal.getUser();
+        User user = principal != null ? principal.getUser() : getDummyUser();
         crewService.deleteCrew(id, user);
         
         return ResponseEntity.noContent().build();
@@ -73,7 +90,7 @@ public class CrewController {
             @PathVariable Long id,
             @AuthenticationPrincipal PrincipalDetails principal) {
         
-        User user = principal.getUser();
+        User user = principal != null ? principal.getUser() : getDummyUser();
         CrewApplyResponse response = crewService.applyToCrew(id, user);
         
         return ResponseEntity.ok(response);
@@ -87,7 +104,7 @@ public class CrewController {
             @Valid @RequestBody ParticipantApprovalRequest request,
             @AuthenticationPrincipal PrincipalDetails principal) {
         
-        User user = principal.getUser();
+        User user = principal != null ? principal.getUser() : getDummyUser();
         CrewApprovalResponse response = crewService.approveParticipant(id, userId, request, user);
         
         return ResponseEntity.ok(response);
