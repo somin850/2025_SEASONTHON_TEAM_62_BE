@@ -65,9 +65,14 @@ public enum ExceptionType {
     PARTICIPANT_STATUS_ERROR(BAD_REQUEST, "CP003", "잘못된 참여자 상태"),
     
     // route
-    ROUTE_NOT_FOUND(NOT_FOUND, "R001", "존재하지 않는 경로"),
-    ROUTE_GENERATION_ERROR(INTERNAL_SERVER_ERROR, "R002", "경로 생성 에러"),
-    ROUTE_AI_SERVICE_TIMEOUT(REQUEST_TIMEOUT, "R003", "AI 서비스 응답 시간 초과");
+    ROUTE_NOT_FOUND(NOT_FOUND, "RT001", "존재하지 않는 경로"),
+    ROUTE_GENERATION_ERROR(INTERNAL_SERVER_ERROR, "RT002", "경로 생성 에러"),
+    ROUTE_AI_SERVICE_TIMEOUT(REQUEST_TIMEOUT, "RT003", "AI 서비스 응답 시간 초과"),
+    
+    // report
+    REPORT_NOT_FOUND(NOT_FOUND, "R001", "존재하지 않는 신고"),
+    REPORT_ACCESS_DENIED(FORBIDDEN, "R002", "신고에 대한 접근 권한이 없습니다"),
+    REPORT_ALREADY_PROCESSED(CONFLICT, "R003", "이미 처리된 신고입니다");
 
     private final HttpStatus status;
     private final String code;

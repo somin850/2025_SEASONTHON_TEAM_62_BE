@@ -7,6 +7,10 @@ import com.kbsw.seasonthon.crew.enums.ParticipantStatus;
 import com.kbsw.seasonthon.crew.enums.SafetyLevel;
 import com.kbsw.seasonthon.crew.repository.CrewParticipantRepository;
 import com.kbsw.seasonthon.crew.repository.CrewRepository;
+import com.kbsw.seasonthon.report.entity.Report;
+import com.kbsw.seasonthon.report.enums.ReportStatus;
+import com.kbsw.seasonthon.report.enums.TargetType;
+import com.kbsw.seasonthon.report.repository.ReportRepository;
 import com.kbsw.seasonthon.security.jwt.enums.Role;
 import com.kbsw.seasonthon.user.entity.User;
 import com.kbsw.seasonthon.user.repository.UserRepository;
@@ -30,6 +34,7 @@ public class DataInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final CrewRepository crewRepository;
     private final CrewParticipantRepository crewParticipantRepository;
+    private final ReportRepository reportRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -52,40 +57,154 @@ public class DataInitializer implements CommandLineRunner {
         
         // 3. 크루 참여자 관계 생성
         createCrewParticipants(testUsers, testCrews);
+        
+        // 4. 신고 테스트 데이터 생성
+        createTestReports(testUsers);
     }
 
     private List<User> createTestUsers() {
         log.info("테스트 사용자 생성 중...");
         
         List<User> users = Arrays.asList(
+            // 지방 청년들의 다양한 상황을 반영한 15명의 사용자
             User.builder()
-                .username("testuser1")
+                .username("jobseeker_kim")
                 .password(passwordEncoder.encode("password123"))
-                .nickname("러너김")
-                .email("runner1@example.com")
+                .nickname("취준러너김")
+                .email("jobseeker@example.com")
                 .role(Role.USER)
                 .address("대전시 유성구")
                 .phone("010-1234-5678")
                 .build(),
             
             User.builder()
-                .username("testuser2")
+                .username("shy_worker")
                 .password(passwordEncoder.encode("password123"))
-                .nickname("달리기박")
-                .email("runner2@example.com")
+                .nickname("내성적인박")
+                .email("shyworker@example.com")
                 .role(Role.USER)
                 .address("부산시 해운대구")
                 .phone("010-2345-6789")
                 .build(),
                 
             User.builder()
-                .username("testuser3")
+                .username("college_runner")
                 .password(passwordEncoder.encode("password123"))
-                .nickname("조깅이")
-                .email("runner3@example.com")
+                .nickname("대학생조")
+                .email("college@example.com")
                 .role(Role.USER)
                 .address("대구시 북구")
                 .phone("010-3456-7890")
+                .build(),
+                
+            User.builder()
+                .username("friendly_lee")
+                .password(passwordEncoder.encode("password123"))
+                .nickname("친화적인이")
+                .email("friendly@example.com")
+                .role(Role.USER)
+                .address("광주시 서구")
+                .phone("010-4567-8901")
+                .build(),
+                
+            User.builder()
+                .username("freelancer_choi")
+                .password(passwordEncoder.encode("password123"))
+                .nickname("프리랜서최")
+                .email("freelancer@example.com")
+                .role(Role.USER)
+                .address("전주시 완산구")
+                .phone("010-5678-9012")
+                .build(),
+                
+            User.builder()
+                .username("newbie_kang")
+                .password(passwordEncoder.encode("password123"))
+                .nickname("러닝초보강")
+                .email("newbie@example.com")
+                .role(Role.USER)
+                .address("청주시 흥덕구")
+                .phone("010-6789-0123")
+                .build(),
+                
+            User.builder()
+                .username("social_jung")
+                .password(passwordEncoder.encode("password123"))
+                .nickname("사교적인정")
+                .email("social@example.com")
+                .role(Role.USER)
+                .address("천안시 동남구")
+                .phone("010-7890-1234")
+                .build(),
+                
+            User.builder()
+                .username("lonely_yoon")
+                .password(passwordEncoder.encode("password123"))
+                .nickname("외로운윤")
+                .email("lonely@example.com")
+                .role(Role.USER)
+                .address("창원시 의창구")
+                .phone("010-8901-2345")
+                .build(),
+                
+            User.builder()
+                .username("office_worker")
+                .password(passwordEncoder.encode("password123"))
+                .nickname("직장인한")
+                .email("office@example.com")
+                .role(Role.USER)
+                .address("포항시 북구")
+                .phone("010-9012-3456")
+                .build(),
+                
+            User.builder()
+                .username("beginner_song")
+                .password(passwordEncoder.encode("password123"))
+                .nickname("운동초보송")
+                .email("beginner@example.com")
+                .role(Role.USER)
+                .address("진주시 진주대로")
+                .phone("010-0123-4567")
+                .build(),
+                
+            User.builder()
+                .username("introverted_oh")
+                .password(passwordEncoder.encode("password123"))
+                .nickname("조용한오")
+                .email("introverted@example.com")
+                .role(Role.USER)
+                .address("순천시 중앙로")
+                .phone("010-1234-5679")
+                .build(),
+                
+            User.builder()
+                .username("motivated_lim")
+                .password(passwordEncoder.encode("password123"))
+                .nickname("의욕적인임")
+                .email("motivated@example.com")
+                .role(Role.USER)
+                .address("목포시 용해동")
+                .phone("010-2345-6780")
+                .build(),
+                
+            User.builder()
+                .username("graduate_nam")
+                .password(passwordEncoder.encode("password123"))
+                .nickname("졸업생남")
+                .email("graduate@example.com")
+                .role(Role.USER)
+                .address("군산시 나운동")
+                .phone("010-3456-7891")
+                .build(),
+                
+            User.builder()
+                .username("newcomer_seo")
+                .password(passwordEncoder.encode("password123"))
+                .nickname("새내기서")
+                .email("newcomer@example.com")
+                .role(Role.USER)
+                .address("익산시 영등동")
+                .phone("010-4567-8902")
                 .build(),
                 
             User.builder()
@@ -106,19 +225,20 @@ public class DataInitializer implements CommandLineRunner {
         log.info("테스트 크루 생성 중...");
         
         List<Crew> crews = Arrays.asList(
+            // 지방 청년들을 위한 사회적 연결 중심의 15개 크루
             Crew.builder()
-                .title("금강 달리기 크루루")
-                .description("금강 산책로에서 가볍게 뛰며 함께 운동해요! 초보자도 환영합니다.")
-                .host(users.get(0))
-                .maxParticipants(10)
-                .routeId("route_geumgang_001")
+                .title("취준생 응원 러닝")
+                .description("취업 준비하느라 지친 마음, 함께 달리며 서로 응원해요! 스트레스 해소와 동기부여까지 💪")
+                .host(users.get(0)) // 취준러너김
+                .maxParticipants(8)
+                .routeId("route_jobseeker_001")
                 .type("safe")
-                .distanceKm(8.5)
-                .safetyScore(90)
+                .distanceKm(4.5)
+                .safetyScore(92)
                 .safetyLevel(SafetyLevel.SAFE)
-                .durationMin(45)
-                .startLocation("금강공원 입구")
-                .pace("5'30\"/km")
+                .durationMin(35)
+                .startLocation("대전 유성구 금강공원")
+                .pace("6'30\"/km")
                 .startTime(LocalDateTime.now().plusDays(2).withHour(19).withMinute(0))
                 .status(CrewStatus.OPEN)
                 .waypoints(Arrays.asList(
@@ -126,99 +246,327 @@ public class DataInitializer implements CommandLineRunner {
                     "36.3514,127.3855", 
                     "36.3509,127.3835"
                 ))
-                .tags(Arrays.asList("취준생", "20대", "주말", "초보환영"))
+                .tags(Arrays.asList("취준생", "스트레스해소", "동기부여", "친화적인", "대전"))
                 .build(),
                 
             Crew.builder()
-                .title("경북대 러닝 크루")
-                .description("경북대 주변 러닝 코스로 함께 달려요. 체력 향상이 목표입니다!")
-                .host(users.get(1))
+                .title("내성적인 분들 환영 🤗")
+                .description("말 걸기 어려워하는 분들도 괜찮아요. 천천히 자연스럽게 친해져요. 부담없는 분위기!")
+                .host(users.get(1)) // 내성적인박
                 .maxParticipants(6)
-                .routeId("route_knu_002")
-                .type("normal")
-                .distanceKm(5.2)
-                .safetyScore(75)
-                .safetyLevel(SafetyLevel.MEDIUM)
-                .durationMin(35)
-                .startLocation("경북대학교 정문")
-                .pace("6'00\"/km")
+                .routeId("route_shy_002")
+                .type("safe")
+                .distanceKm(3.8)
+                .safetyScore(95)
+                .safetyLevel(SafetyLevel.SAFE)
+                .durationMin(28)
+                .startLocation("부산 해운대 해수욕장")
+                .pace("7'20\"/km")
                 .startTime(LocalDateTime.now().plusDays(1).withHour(18).withMinute(30))
                 .status(CrewStatus.OPEN)
                 .waypoints(Arrays.asList(
-                    "35.8895,128.6137",
-                    "35.8905,128.6147",
-                    "35.8900,128.6150"
+                    "35.1595,129.1606",
+                    "35.1605,129.1616",
+                    "35.1615,129.1626"
                 ))
-                .tags(Arrays.asList("자유로운 분위기기", "대학교", "평일", "체력향상"))
+                .tags(Arrays.asList("내성적인", "부담없는", "천천히", "초보환영", "부산"))
                 .build(),
                 
             Crew.builder()
-                .title("새벽 조깅 모임")
-                .description("상쾌한 밤 공기를 마시며 조깅해요!")
-                .host(users.get(2))
-                .maxParticipants(8)
-                .routeId("route_morning_003")
+                .title("대학생 친구 만들기 🎓")
+                .description("새 학기, 새로운 친구들과 함께 달려요! 대학생활 적응하기 힘든 분들 모여라~")
+                .host(users.get(2)) // 대학생조
+                .maxParticipants(12)
+                .routeId("route_college_003")
                 .type("safe")
-                .distanceKm(3.8)
-                .safetyScore(85)
-                .safetyLevel(SafetyLevel.SAFE)
-                .durationMin(25)
-                .startLocation("중앙공원 입구")
-                .pace("6'30\"/km")
-                .startTime(LocalDateTime.now().plusDays(3).withHour(6).withMinute(0))
-                .status(CrewStatus.OPEN)
-                .waypoints(Arrays.asList(
-                    "35.8700,128.5900",
-                    "35.8710,128.5910",
-                    "35.8705,128.5920"
-                ))
-                .tags(Arrays.asList("직장인", "밤", "공원", "가벼운운동"))
-                .build(),
-                
-            Crew.builder()
-                .title("마라톤 준비반")
-                .description("마라톤 대회 준비를 위한 고강도 훈련 크루입니다. 경험자만 참여해주세요.")
-                .host(users.get(0))
-                .maxParticipants(5)
-                .routeId("route_marathon_004")
-                .type("challenging")
-                .distanceKm(15.0)
-                .safetyScore(60)
-                .safetyLevel(SafetyLevel.UNSAFE)
-                .durationMin(90)
-                .startLocation("대전 월드컵경기장")
-                .pace("4'45\"/km")
-                .startTime(LocalDateTime.now().plusDays(5).withHour(7).withMinute(0))
-                .status(CrewStatus.OPEN)
-                .waypoints(Arrays.asList(
-                    "36.3504,127.3845",
-                    "36.3554,127.3895",
-                    "36.3534,127.3925",
-                    "36.3514,127.3865"
-                ))
-                .tags(Arrays.asList("마라톤", "고강도", "경험자", "대회준비"))
-                .build(),
-                
-            Crew.builder()
-                .title("완료된 크루 (예시)")
-                .description("이미 완료된 크루입니다.")
-                .host(users.get(3))
-                .maxParticipants(4)
-                .routeId("route_completed_005")
-                .type("safe")
-                .distanceKm(4.0)
+                .distanceKm(5.0)
                 .safetyScore(88)
                 .safetyLevel(SafetyLevel.SAFE)
-                .durationMin(30)
-                .startLocation("부산 해운대해수욕장")
-                .pace("7'00\"/km")
-                .startTime(LocalDateTime.now().minusDays(1).withHour(19).withMinute(0))
+                .durationMin(38)
+                .startLocation("대구 앞산공원")
+                .pace("7'30\"/km")
+                .startTime(LocalDateTime.now().plusDays(3).withHour(17).withMinute(0))
+                .status(CrewStatus.OPEN)
+                .waypoints(Arrays.asList(
+                    "35.8200,128.5400",
+                    "35.8210,128.5410",
+                    "35.8220,128.5420"
+                ))
+                .tags(Arrays.asList("대학생", "친구만들기", "사교적인", "새학기", "대구"))
+                .build(),
+                
+            Crew.builder()
+                .title("친화적인 분들과 함께 💕")
+                .description("밝고 긍정적인 에너지로 함께 달려요! 서로 응원하고 격려하는 따뜻한 모임입니다.")
+                .host(users.get(3)) // 친화적인이
+                .maxParticipants(10)
+                .routeId("route_friendly_004")
+                .type("safe")
+                .distanceKm(4.2)
+                .safetyScore(90)
+                .safetyLevel(SafetyLevel.SAFE)
+                .durationMin(32)
+                .startLocation("광주 5·18기념공원")
+                .pace("7'40\"/km")
+                .startTime(LocalDateTime.now().plusDays(4).withHour(18).withMinute(0))
+                .status(CrewStatus.OPEN)
+                .waypoints(Arrays.asList(
+                    "35.1500,126.9100",
+                    "35.1510,126.9110",
+                    "35.1520,126.9120"
+                ))
+                .tags(Arrays.asList("친화적인", "긍정적인", "따뜻한", "응원", "광주"))
+                .build(),
+                
+            Crew.builder()
+                .title("프리랜서 네트워킹 💼")
+                .description("집에만 있어 답답한 프리랜서들! 운동도 하고 인맥도 만들어요. 서로 정보도 공유하고!")
+                .host(users.get(4)) // 프리랜서최
+                .maxParticipants(7)
+                .routeId("route_freelancer_005")
+                .type("safe")
+                .distanceKm(5.5)
+                .safetyScore(85)
+                .safetyLevel(SafetyLevel.SAFE)
+                .durationMin(42)
+                .startLocation("전주 덕진공원")
+                .pace("7'40\"/km")
+                .startTime(LocalDateTime.now().plusDays(5).withHour(16).withMinute(0))
+                .status(CrewStatus.OPEN)
+                .waypoints(Arrays.asList(
+                    "35.8242,127.1480",
+                    "35.8252,127.1490",
+                    "35.8262,127.1500"
+                ))
+                .tags(Arrays.asList("프리랜서", "네트워킹", "정보공유", "자유로운", "전주"))
+                .build(),
+                
+            Crew.builder()
+                .title("러닝 완전 초보 모임 🌱")
+                .description("운동화도 처음 신어보는 분들을 위한 모임! 아무것도 모르셔도 되어요. 천천히 시작해요.")
+                .host(users.get(5)) // 러닝초보강
+                .maxParticipants(15)
+                .routeId("route_beginner_006")
+                .type("safe")
+                .distanceKm(2.8)
+                .safetyScore(98)
+                .safetyLevel(SafetyLevel.SAFE)
+                .durationMin(25)
+                .startLocation("청주 용담대 주변")
+                .pace("8'30\"/km")
+                .startTime(LocalDateTime.now().plusDays(6).withHour(15).withMinute(0))
+                .status(CrewStatus.OPEN)
+                .waypoints(Arrays.asList(
+                    "36.6358,127.4916",
+                    "36.6368,127.4926"
+                ))
+                .tags(Arrays.asList("초보자", "운동초보", "천천히", "부담없는", "청주"))
+                .build(),
+                
+            Crew.builder()
+                .title("사교적인 사람들 모여라! 🎉")
+                .description("말 많고 신나는 사람들과 함께! 러닝 후 맥주한잔도 좋아요. 에너지 넘치는 모임!")
+                .host(users.get(6)) // 사교적인정
+                .maxParticipants(14)
+                .routeId("route_social_007")
+                .type("safe")
+                .distanceKm(6.2)
+                .safetyScore(87)
+                .safetyLevel(SafetyLevel.SAFE)
+                .durationMin(48)
+                .startLocation("천안 독립기념관 일대")
+                .pace("7'45\"/km")
+                .startTime(LocalDateTime.now().plusDays(3).withHour(19).withMinute(30))
+                .status(CrewStatus.OPEN)
+                .waypoints(Arrays.asList(
+                    "36.8151,127.1139",
+                    "36.8161,127.1149",
+                    "36.8171,127.1159"
+                ))
+                .tags(Arrays.asList("사교적인", "에너지넘치는", "신나는", "맥주", "천안"))
+                .build(),
+                
+            Crew.builder()
+                .title("외로운 사람들의 힐링 러닝 💙")
+                .description("혼자 있는 시간이 많아 외로운 분들, 함께 달리며 마음의 위로를 받아요. 서로 이해하는 따뜻한 모임.")
+                .host(users.get(7)) // 외로운윤
+                .maxParticipants(8)
+                .routeId("route_lonely_008")
+                .type("safe")
+                .distanceKm(4.0)
+                .safetyScore(92)
+                .safetyLevel(SafetyLevel.SAFE)
+                .durationMin(32)
+                .startLocation("창원 용지공원")
+                .pace("8'00\"/km")
+                .startTime(LocalDateTime.now().plusDays(4).withHour(18).withMinute(0))
+                .status(CrewStatus.OPEN)
+                .waypoints(Arrays.asList(
+                    "35.2281,128.6811",
+                    "35.2291,128.6821",
+                    "35.2301,128.6831"
+                ))
+                .tags(Arrays.asList("외로운", "힐링", "위로", "따뜻한", "창원"))
+                .build(),
+                
+            Crew.builder()
+                .title("직장인 퇴근 후 스트레스 해소 💼")
+                .description("하루 종일 일한 피로와 스트레스, 러닝으로 날려버려요! 직장 생활의 고충을 서로 나누며 달려요.")
+                .host(users.get(8)) // 직장인한
+                .maxParticipants(10)
+                .routeId("route_office_009")
+                .type("safe")
+                .distanceKm(5.8)
+                .safetyScore(86)
+                .safetyLevel(SafetyLevel.SAFE)
+                .durationMin(45)
+                .startLocation("포항 영일대해수욕장")
+                .pace("7'45\"/km")
+                .startTime(LocalDateTime.now().plusDays(5).withHour(19).withMinute(0))
+                .status(CrewStatus.OPEN)
+                .waypoints(Arrays.asList(
+                    "36.0190,129.3650",
+                    "36.0200,129.3660",
+                    "36.0210,129.3670"
+                ))
+                .tags(Arrays.asList("직장인", "스트레스해소", "퇴근후", "공감", "포항"))
+                .build(),
+                
+            Crew.builder()
+                .title("운동 완전 처음이에요 🥺")
+                .description("운동이라곤 체육시간 이후 처음인 분들! 같이 천천히 시작해요. 걷기부터 조깅까지 단계별로!")
+                .host(users.get(9)) // 운동초보송
+                .maxParticipants(12)
+                .routeId("route_exercise_010")
+                .type("safe")
+                .distanceKm(3.2)
+                .safetyScore(96)
+                .safetyLevel(SafetyLevel.SAFE)
+                .durationMin(28)
+                .startLocation("진주 남강댐 공원")
+                .pace("8'45\"/km")
+                .startTime(LocalDateTime.now().plusDays(6).withHour(16).withMinute(0))
+                .status(CrewStatus.OPEN)
+                .waypoints(Arrays.asList(
+                    "35.1797,128.1076",
+                    "35.1807,128.1086",
+                    "35.1817,128.1096"
+                ))
+                .tags(Arrays.asList("운동초보", "완전처음", "단계별", "천천히", "진주"))
+                .build(),
+                
+            Crew.builder()
+                .title("조용한 성격이지만 친구는 만들고 싶어요 🤫")
+                .description("말수는 적지만 좋은 사람들과 함께하고 싶은 분들! 조용히 달리다가 자연스럽게 친해져요.")
+                .host(users.get(10)) // 조용한오
+                .maxParticipants(6)
+                .routeId("route_quiet_011")
+                .type("safe")
+                .distanceKm(4.8)
+                .safetyScore(90)
+                .safetyLevel(SafetyLevel.SAFE)
+                .durationMin(38)
+                .startLocation("순천만국가정원")
+                .pace("7'55\"/km")
+                .startTime(LocalDateTime.now().plusDays(7).withHour(17).withMinute(30))
+                .status(CrewStatus.OPEN)
+                .waypoints(Arrays.asList(
+                    "34.8853,127.5095",
+                    "34.8863,127.5105",
+                    "34.8873,127.5115"
+                ))
+                .tags(Arrays.asList("내성적인", "조용한", "자연스럽게", "소수정예", "순천"))
+                .build(),
+                
+            Crew.builder()
+                .title("의욕 넘치는 사람들 모집! ⚡")
+                .description("뭔가 새로운 도전을 하고 싶은 의욕적인 분들! 목표를 세우고 함께 달성해나가요. 동기부여 최고!")
+                .host(users.get(11)) // 의욕적인임
+                .maxParticipants(9)
+                .routeId("route_motivated_012")
+                .type("safe")
+                .distanceKm(6.5)
+                .safetyScore(84)
+                .safetyLevel(SafetyLevel.SAFE)
+                .durationMin(50)
+                .startLocation("목포 평화광장")
+                .pace("7'40\"/km")
+                .startTime(LocalDateTime.now().plusDays(4).withHour(19).withMinute(0))
+                .status(CrewStatus.OPEN)
+                .waypoints(Arrays.asList(
+                    "34.7881,126.3925",
+                    "34.7891,126.3935",
+                    "34.7901,126.3945"
+                ))
+                .tags(Arrays.asList("의욕적인", "도전", "목표달성", "동기부여", "목포"))
+                .build(),
+                
+            Crew.builder()
+                .title("갓 졸업한 사회초년생 모임 🎓")
+                .description("대학교 막 졸업하고 사회생활 시작한 분들! 새로운 환경에 적응하며 함께 성장해요. 선후배 없이 편하게!")
+                .host(users.get(12)) // 졸업생남
+                .maxParticipants(11)
+                .routeId("route_graduate_013")
+                .type("safe")
+                .distanceKm(5.2)
+                .safetyScore(88)
+                .safetyLevel(SafetyLevel.SAFE)
+                .durationMin(42)
+                .startLocation("군산 은파호수공원")
+                .pace("8'05\"/km")
+                .startTime(LocalDateTime.now().plusDays(6).withHour(18).withMinute(30))
+                .status(CrewStatus.OPEN)
+                .waypoints(Arrays.asList(
+                    "35.9674,126.7188",
+                    "35.9684,126.7198",
+                    "35.9694,126.7208"
+                ))
+                .tags(Arrays.asList("졸업생", "사회초년생", "새로운환경", "편한분위기", "군산"))
+                .build(),
+                
+            Crew.builder()
+                .title("새내기들의 설렘 러닝 ✨")
+                .description("뭔가 새로 시작하는 분들! 새 학교, 새 직장, 새로운 도시... 설레는 마음으로 함께 달려요!")
+                .host(users.get(13)) // 새내기서
+                .maxParticipants(13)
+                .routeId("route_newcomer_014")
+                .type("safe")
+                .distanceKm(4.6)
+                .safetyScore(91)
+                .safetyLevel(SafetyLevel.SAFE)
+                .durationMin(36)
+                .startLocation("익산 미륵사지")
+                .pace("7'50\"/km")
+                .startTime(LocalDateTime.now().plusDays(3).withHour(16).withMinute(30))
+                .status(CrewStatus.OPEN)
+                .waypoints(Arrays.asList(
+                    "35.9907,126.9624",
+                    "35.9917,126.9634",
+                    "35.9927,126.9644"
+                ))
+                .tags(Arrays.asList("새내기", "새로운시작", "설렘", "적응", "익산"))
+                .build(),
+                
+            Crew.builder()
+                .title("완료된 힐링 러닝 (지난주)")
+                .description("지난주에 성공적으로 마친 힐링 러닝 모임입니다. 다들 좋은 시간 보냈어요!")
+                .host(users.get(1)) // 내성적인박
+                .maxParticipants(8)
+                .routeId("route_completed_015")
+                .type("safe")
+                .distanceKm(3.5)
+                .safetyScore(94)
+                .safetyLevel(SafetyLevel.SAFE)
+                .durationMin(28)
+                .startLocation("부산 해운대 해수욕장")
+                .pace("8'00\"/km")
+                .startTime(LocalDateTime.now().minusDays(3).withHour(17).withMinute(0))
                 .status(CrewStatus.CLOSED)
                 .waypoints(Arrays.asList(
                     "35.1595,129.1606",
                     "35.1605,129.1616"
                 ))
-                .tags(Arrays.asList("완료", "해변", "가벼운운동"))
+                .tags(Arrays.asList("완료", "힐링", "성공적", "좋은시간", "부산"))
                 .build()
         );
         
@@ -228,10 +576,71 @@ public class DataInitializer implements CommandLineRunner {
     private void createCrewParticipants(List<User> users, List<Crew> crews) {
         log.info("크루 참여자 관계 생성 중...");
         
-        // 첫 번째 크루에 여러 사용자 참여
+        // 취준생 응원 러닝 (index 0)
         crewParticipantRepository.save(
             CrewParticipant.builder()
                 .crew(crews.get(0))
+                .user(users.get(12)) // 졸업생남
+                .status(ParticipantStatus.APPROVED)
+                .build()
+        );
+        
+        crewParticipantRepository.save(
+            CrewParticipant.builder()
+                .crew(crews.get(0))
+                .user(users.get(13)) // 새내기서
+                .status(ParticipantStatus.APPLIED)
+                .build()
+        );
+        
+        // 내성적인 분들 환영 (index 1)
+        crewParticipantRepository.save(
+            CrewParticipant.builder()
+                .crew(crews.get(1))
+                .user(users.get(10)) // 조용한오
+                .status(ParticipantStatus.APPROVED)
+                .build()
+        );
+        
+        crewParticipantRepository.save(
+            CrewParticipant.builder()
+                .crew(crews.get(1))
+                .user(users.get(7)) // 외로운
+                .status(ParticipantStatus.APPROVED)
+                .build()
+        );
+        
+        // 대학생 친구 만들기 (index 2)
+        crewParticipantRepository.save(
+            CrewParticipant.builder()
+                .crew(crews.get(2))
+                .user(users.get(13)) // 새내기서
+                .status(ParticipantStatus.APPROVED)
+                .build()
+        );
+        
+        crewParticipantRepository.save(
+            CrewParticipant.builder()
+                .crew(crews.get(2))
+                .user(users.get(6)) // 사교적인정
+                .status(ParticipantStatus.APPROVED)
+                .build()
+        );
+        
+        // 추가 참여자 관계들 - 다양한 크루에 다양한 사용자들이 참여
+        
+        // 한강 러닝 크루 (index 5)에 참여자들 추가
+        crewParticipantRepository.save(
+            CrewParticipant.builder()
+                .crew(crews.get(5)) // 한강 러닝 크루
+                .user(users.get(0))
+                .status(ParticipantStatus.APPROVED)
+                .build()
+        );
+        
+        crewParticipantRepository.save(
+            CrewParticipant.builder()
+                .crew(crews.get(5))
                 .user(users.get(1))
                 .status(ParticipantStatus.APPROVED)
                 .build()
@@ -239,16 +648,75 @@ public class DataInitializer implements CommandLineRunner {
         
         crewParticipantRepository.save(
             CrewParticipant.builder()
-                .crew(crews.get(0))
+                .crew(crews.get(5))
                 .user(users.get(2))
                 .status(ParticipantStatus.APPLIED)
                 .build()
         );
         
-        // 두 번째 크루에 사용자 참여
+        // 새벽 5시 기상 크루 (index 6)에 참여자들 추가
         crewParticipantRepository.save(
             CrewParticipant.builder()
-                .crew(crews.get(1))
+                .crew(crews.get(6))
+                .user(users.get(4))
+                .status(ParticipantStatus.APPROVED)
+                .build()
+        );
+        
+        crewParticipantRepository.save(
+            CrewParticipant.builder()
+                .crew(crews.get(6))
+                .user(users.get(7))
+                .status(ParticipantStatus.APPLIED)
+                .build()
+        );
+        
+        // 주말 장거리 크루 (index 7)에 참여자들 추가
+        crewParticipantRepository.save(
+            CrewParticipant.builder()
+                .crew(crews.get(7))
+                .user(users.get(4))
+                .status(ParticipantStatus.APPROVED)
+                .build()
+        );
+        
+        crewParticipantRepository.save(
+            CrewParticipant.builder()
+                .crew(crews.get(7))
+                .user(users.get(0))
+                .status(ParticipantStatus.REJECTED)
+                .build()
+        );
+        
+        // 야간 러닝 동호회 (index 8)에 참여자들 추가
+        crewParticipantRepository.save(
+            CrewParticipant.builder()
+                .crew(crews.get(8))
+                .user(users.get(1))
+                .status(ParticipantStatus.APPROVED)
+                .build()
+        );
+        
+        crewParticipantRepository.save(
+            CrewParticipant.builder()
+                .crew(crews.get(8))
+                .user(users.get(2))
+                .status(ParticipantStatus.APPROVED)
+                .build()
+        );
+        
+        crewParticipantRepository.save(
+            CrewParticipant.builder()
+                .crew(crews.get(8))
+                .user(users.get(5))
+                .status(ParticipantStatus.APPLIED)
+                .build()
+        );
+        
+        // 초보자 환영 크루 (index 9)에 많은 참여자들 추가
+        crewParticipantRepository.save(
+            CrewParticipant.builder()
+                .crew(crews.get(9))
                 .user(users.get(0))
                 .status(ParticipantStatus.APPROVED)
                 .build()
@@ -256,19 +724,199 @@ public class DataInitializer implements CommandLineRunner {
         
         crewParticipantRepository.save(
             CrewParticipant.builder()
-                .crew(crews.get(1))
+                .crew(crews.get(9))
                 .user(users.get(2))
                 .status(ParticipantStatus.APPROVED)
                 .build()
         );
         
-        // 세 번째 크루에 사용자 참여
         crewParticipantRepository.save(
             CrewParticipant.builder()
-                .crew(crews.get(2))
-                .user(users.get(0))
+                .crew(crews.get(9))
+                .user(users.get(4))
+                .status(ParticipantStatus.APPROVED)
+                .build()
+        );
+        
+        crewParticipantRepository.save(
+            CrewParticipant.builder()
+                .crew(crews.get(9))
+                .user(users.get(5))
+                .status(ParticipantStatus.APPROVED)
+                .build()
+        );
+        
+        crewParticipantRepository.save(
+            CrewParticipant.builder()
+                .crew(crews.get(9))
+                .user(users.get(6))
                 .status(ParticipantStatus.APPLIED)
                 .build()
         );
+        
+        // 고강도 인터벌 크루 (index 10)에 소수 참여자들 추가
+        crewParticipantRepository.save(
+            CrewParticipant.builder()
+                .crew(crews.get(10))
+                .user(users.get(0))
+                .status(ParticipantStatus.APPROVED)
+                .build()
+        );
+        
+        crewParticipantRepository.save(
+            CrewParticipant.builder()
+                .crew(crews.get(10))
+                .user(users.get(6))
+                .status(ParticipantStatus.APPLIED)
+                .build()
+        );
+        
+        // 여성 전용 러닝 크루 (index 11)에 참여자들 추가 (여성 사용자들만)
+        crewParticipantRepository.save(
+            CrewParticipant.builder()
+                .crew(crews.get(11))
+                .user(users.get(5)) // 새벽러너
+                .status(ParticipantStatus.APPROVED)
+                .build()
+        );
+        
+        crewParticipantRepository.save(
+            CrewParticipant.builder()
+                .crew(crews.get(11))
+                .user(users.get(6)) // 주말러너
+                .status(ParticipantStatus.APPLIED)
+                .build()
+        );
+    }
+
+    private void createTestReports(List<User> users) {
+        log.info("테스트 신고 데이터 생성 중...");
+        
+        List<Report> reports = Arrays.asList(
+            // 다양한 상태와 타입의 신고 데이터들
+            Report.builder()
+                .targetType(TargetType.ROUTE)
+                .targetId(123L)
+                .reporter(users.get(0)) // 취준러너김
+                .reason("이 경로에 공사 중인 구간이 있어서 러닝하기 위험합니다. 특히 밤에는 조명이 부족해서 더 위험해요.")
+                .status(ReportStatus.OPEN)
+                .build(),
+                
+            Report.builder()
+                .targetType(TargetType.LOCATION)
+                .targetId(456L)
+                .reporter(users.get(1)) // 내성적인박
+                .reason("이 지역에 개가 풀어져 있어서 러닝하다가 놀랐습니다. 주인이 리드줄을 안 하고 있어요.")
+                .status(ReportStatus.RESOLVED)
+                .build(),
+                
+            Report.builder()
+                .targetType(TargetType.HAZARD)
+                .targetId(789L)
+                .reporter(users.get(2)) // 대학생조
+                .reason("맨홀 뚜껑이 열려있어서 발을 헛디딜 뻔했습니다. 안전사고 위험이 큽니다.")
+                .status(ReportStatus.OPEN)
+                .build(),
+                
+            Report.builder()
+                .targetType(TargetType.ROUTE)
+                .targetId(101L)
+                .reporter(users.get(3)) // 친화적인이
+                .reason("도로에 큰 구멍이 여러 개 있어서 넘어질 위험이 있어요. 비 온 후에는 물이 고여서 더 위험합니다.")
+                .status(ReportStatus.OPEN)
+                .build(),
+                
+            Report.builder()
+                .targetType(TargetType.LOCATION)
+                .targetId(202L)
+                .reporter(users.get(4)) // 프리랜서최
+                .reason("이 구간에 가로등이 고장나서 밤에는 너무 어둡습니다. 여성 혼자 뛰기에는 무서워요.")
+                .status(ReportStatus.RESOLVED)
+                .build(),
+                
+            Report.builder()
+                .targetType(TargetType.HAZARD)
+                .targetId(303L)
+                .reporter(users.get(5)) // 러닝초보강
+                .reason("인도에 자전거가 불법 주차되어 있어서 러닝하기 어렵습니다. 피하려다 차도로 나가게 돼요.")
+                .status(ReportStatus.REJECTED)
+                .build(),
+                
+            Report.builder()
+                .targetType(TargetType.ROUTE)
+                .targetId(404L)
+                .reporter(users.get(6)) // 사교적인정
+                .reason("이 경로 중간에 계단이 너무 가파르고 미끄러워서 위험합니다. 특히 비 올 때는 매우 위험해요.")
+                .status(ReportStatus.OPEN)
+                .build(),
+                
+            Report.builder()
+                .targetType(TargetType.LOCATION)
+                .targetId(505L)
+                .reporter(users.get(7)) // 외로운윤
+                .reason("공원 화장실 근처에서 이상한 냄새가 나고 위생상태가 좋지 않습니다.")
+                .status(ReportStatus.OPEN)
+                .build(),
+                
+            Report.builder()
+                .targetType(TargetType.HAZARD)
+                .targetId(606L)
+                .reporter(users.get(8)) // 직장인한
+                .reason("나무 가지가 너무 낮게 뻗어있어서 러닝하다가 머리를 부딪힐 뻔했습니다.")
+                .status(ReportStatus.RESOLVED)
+                .build(),
+                
+            Report.builder()
+                .targetType(TargetType.ROUTE)
+                .targetId(707L)
+                .reporter(users.get(9)) // 운동초보송
+                .reason("이 코스가 너무 가파르고 초보자에게는 위험한 것 같습니다. 난이도 조정이 필요해요.")
+                .status(ReportStatus.OPEN)
+                .build(),
+                
+            Report.builder()
+                .targetType(TargetType.LOCATION)
+                .targetId(808L)
+                .reporter(users.get(10)) // 조용한오
+                .reason("이 지역에 쓰레기가 많이 버려져 있어서 러닝 환경이 좋지 않습니다.")
+                .status(ReportStatus.OPEN)
+                .build(),
+                
+            Report.builder()
+                .targetType(TargetType.HAZARD)
+                .targetId(909L)
+                .reporter(users.get(11)) // 의욕적인임
+                .reason("운동기구가 고장나서 안전사고 위험이 있습니다. 빨리 수리가 필요해요.")
+                .status(ReportStatus.RESOLVED)
+                .build(),
+                
+            // 같은 사용자가 여러 신고를 한 경우
+            Report.builder()
+                .targetType(TargetType.ROUTE)
+                .targetId(111L)
+                .reporter(users.get(0)) // 취준러너김 (두 번째 신고)
+                .reason("또 다른 경로에서 발견한 문제입니다. 보도블록이 들뜨거나 깨진 곳이 많아요.")
+                .status(ReportStatus.OPEN)
+                .build(),
+                
+            Report.builder()
+                .targetType(TargetType.LOCATION)
+                .targetId(222L)
+                .reporter(users.get(1)) // 내성적인박 (두 번째 신고)
+                .reason("공원 입구 근처에서 흡연하는 사람들이 많아서 연기 때문에 러닝하기 어려워요.")
+                .status(ReportStatus.OPEN)
+                .build(),
+                
+            Report.builder()
+                .targetType(TargetType.HAZARD)
+                .targetId(333L)
+                .reporter(users.get(2)) // 대학생조 (두 번째 신고)
+                .reason("벤치가 부러져서 앉으면 위험할 것 같습니다. 교체가 필요해요.")
+                .status(ReportStatus.REJECTED)
+                .build()
+        );
+        
+        reportRepository.saveAll(reports);
+        log.info("신고 테스트 데이터 {} 개 생성 완료", reports.size());
     }
 }
