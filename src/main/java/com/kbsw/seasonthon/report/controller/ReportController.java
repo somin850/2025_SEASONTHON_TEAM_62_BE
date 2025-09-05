@@ -67,16 +67,15 @@ public class ReportController {
      * GET /hazards/all
      */
     @GetMapping("/all")
-    @Operation(summary = "전체 신고 목록 조회", description = "모든 신고 목록을 조회합니다. (관리자 전용)")
+    @Operation(summary = "전체 신고 목록 조회", description = "모든 신고 목록을 조회합니다. (누구나 조회 가능)")
     public ResponseEntity<ResponseBody<List<ReportListResponse>>> getAllReports(
             @AuthenticationPrincipal PrincipalDetails principal) {
         
-        if (principal == null || principal.getUser() == null) {
-            log.warn("인증되지 않은 전체 신고 목록 조회 요청");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        
-        log.info("전체 신고 목록 조회 API 호출 - 사용자: {}", principal.getUser().getId());
+        String userId = (principal != null && principal.getUser() != null) 
+            ? principal.getUser().getId().toString() 
+            : "익명사용자";
+            
+        log.info("전체 신고 목록 조회 API 호출 - 사용자: {}", userId);
         
         List<ReportListResponse> response = reportService.getAllReports();
         
@@ -88,20 +87,19 @@ public class ReportController {
      * GET /hazards/{id}
      */
     @GetMapping("/{id}")
-    @Operation(summary = "신고 상세 조회", description = "특정 신고의 상세 정보를 조회합니다.")
+    @Operation(summary = "신고 상세 조회", description = "특정 신고의 상세 정보를 조회합니다. (누구나 조회 가능)")
     public ResponseEntity<ResponseBody<ReportResponse>> getReport(
             @Parameter(description = "신고 ID", required = true)
             @PathVariable Long id,
             @AuthenticationPrincipal PrincipalDetails principal) {
         
-        if (principal == null || principal.getUser() == null) {
-            log.warn("인증되지 않은 신고 상세 조회 요청 - 신고ID: {}", id);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        String userId = (principal != null && principal.getUser() != null) 
+            ? principal.getUser().getId().toString() 
+            : "익명사용자";
+            
+        log.info("신고 상세 조회 API 호출 - 신고ID: {}, 사용자: {}", id, userId);
         
-        log.info("신고 상세 조회 API 호출 - 신고ID: {}, 사용자: {}", id, principal.getUser().getId());
-        
-        User user = principal.getUser();
+        User user = (principal != null) ? principal.getUser() : null;
         ReportResponse response = reportService.getReport(id, user);
         
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(response));
