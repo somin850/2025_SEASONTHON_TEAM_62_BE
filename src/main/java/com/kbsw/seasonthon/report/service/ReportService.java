@@ -64,13 +64,15 @@ public class ReportService {
      * 신고 상세 조회
      */
     public ReportResponse getReport(Long reportId, User user) {
-        log.info("신고 상세 조회 - 신고ID: {}, 사용자ID: {}", reportId, user.getId());
+        String userInfo = (user != null) ? user.getId().toString() : "익명사용자";
+        log.info("신고 상세 조회 - 신고ID: {}, 사용자: {}", reportId, userInfo);
         
         Report report = findReportById(reportId);
         
-        // 관리자가 아니고 본인의 신고가 아닌 경우 접근 거부
-        if (!user.getRole().equals(Role.ADMIN) && !report.getReporter().getId().equals(user.getId())) {
-            throw new BusinessException(ExceptionType.REPORT_ACCESS_DENIED);
+        // 인증된 사용자인 경우에만 권한 체크 (익명 사용자는 모든 신고 조회 가능)
+        if (user != null) {
+            // 관리자가 아니고 본인의 신고가 아닌 경우에도 조회 허용 (공개 정보)
+            // 필요시 여기서 추가 권한 체크 로직 구현 가능
         }
         
         return ReportResponse.from(report);
