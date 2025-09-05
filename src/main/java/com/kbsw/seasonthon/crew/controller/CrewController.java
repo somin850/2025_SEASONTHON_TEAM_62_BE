@@ -103,8 +103,45 @@ public class CrewController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/all")
+    @Operation(summary = "전체 크루 리스트 조회", description = "모든 크루를 페이징하여 조회합니다. 필터링 없이 전체 크루를 볼 수 있습니다.")
+    public ResponseEntity<CrewListPageResponse> getAllCrews(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDirection) {
+        
+        CrewSearchRequest request = new CrewSearchRequest();
+        request.setPage(page);
+        request.setSize(size);
+        request.setSortBy(sortBy);
+        request.setSortDirection(sortDirection);
+        
+        CrewListPageResponse response = crewService.searchCrews(request);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping
-    @Operation(summary = "크루 리스트 조회", description = "검색 조건에 따라 크루 리스트를 조회합니다.")
+    @Operation(
+        summary = "크루 리스트 조회 (검색 + 필터링)", 
+        description = "검색 조건에 따라 크루 리스트를 조회합니다.\n\n" +
+                     "**검색 필드 (조회용):**\n" +
+                     "- keyword: 제목, 설명 키워드 검색\n" +
+                     "- startLocation: 시작 위치 검색\n" +
+                     "- tags: 태그 검색 (여러 개 가능)\n" +
+                     "- status: 크루 상태 검색\n" +
+                     "- safetyLevel: 안전도 검색\n\n" +
+                     "**필터링 필드 (실제 필터링 동작):**\n" +
+                     "- maxDistance: 최대 거리 필터 (km) - 이 거리 이하의 크루들\n" +
+                     "- minPace: 최소 페이스 필터 - 이 페이스보다 빠르거나 같은 크루들\n" +
+                     "- startTimeFrom: 시작 시간 이후 필터 - 이 시간 이후에 시작하는 크루들\n\n" +
+                     "**배열 파라미터 사용법:**\n" +
+                     "- tags: `?tags=친화적인&tags=러닝&tags=초보환영`\n\n" +
+                     "**예시:**\n" +
+                     "- 전체 조회: `/api/crews`\n" +
+                     "- 키워드 검색: `/api/crews?keyword=취준생`\n" +
+                     "- 실제 필터링: `/api/crews?maxDistance=10.0&minPace=6'00\"/km`"
+    )
     public ResponseEntity<CrewListPageResponse> searchCrews(
             @ModelAttribute CrewSearchRequest request) {
         

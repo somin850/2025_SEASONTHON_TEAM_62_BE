@@ -27,35 +27,25 @@ public interface CrewRepository extends JpaRepository<Crew, Long> {
     
     Optional<Crew> findByIdAndHost(Long id, User host);
     
-    // 크루 검색 메서드들
+    // 크루 검색 메서드들 (조회용 + 실제 필터링)
     @Query("SELECT DISTINCT c FROM Crew c " +
            "LEFT JOIN c.tags t " +
            "WHERE (:keyword IS NULL OR c.title LIKE %:keyword% OR c.description LIKE %:keyword%) " +
            "AND (:startLocation IS NULL OR c.startLocation LIKE %:startLocation%) " +
            "AND (:status IS NULL OR c.status = :status) " +
            "AND (:safetyLevel IS NULL OR c.safetyLevel = :safetyLevel) " +
-           "AND (:minDistance IS NULL OR c.distanceKm >= :minDistance) " +
+           "AND (:tags IS NULL OR t IN :tags) " +
            "AND (:maxDistance IS NULL OR c.distanceKm <= :maxDistance) " +
            "AND (:minPace IS NULL OR c.pace <= :minPace) " +
-           "AND (:maxPace IS NULL OR c.pace >= :maxPace) " +
-           "AND (:startTimeFrom IS NULL OR c.startTime >= :startTimeFrom) " +
-           "AND (:startTimeTo IS NULL OR c.startTime <= :startTimeTo) " +
-           "AND (:minDuration IS NULL OR c.durationMin >= :minDuration) " +
-           "AND (:maxDuration IS NULL OR c.durationMin <= :maxDuration) " +
-           "AND (:tags IS NULL OR t IN :tags)")
+           "AND (:startTimeFrom IS NULL OR c.startTime >= :startTimeFrom)")
     Page<Crew> searchCrews(@Param("keyword") String keyword,
                           @Param("startLocation") String startLocation,
                           @Param("status") CrewStatus status,
                           @Param("safetyLevel") SafetyLevel safetyLevel,
-                          @Param("minDistance") Double minDistance,
+                          @Param("tags") List<String> tags,
                           @Param("maxDistance") Double maxDistance,
                           @Param("minPace") String minPace,
-                          @Param("maxPace") String maxPace,
                           @Param("startTimeFrom") LocalDateTime startTimeFrom,
-                          @Param("startTimeTo") LocalDateTime startTimeTo,
-                          @Param("minDuration") Integer minDuration,
-                          @Param("maxDuration") Integer maxDuration,
-                          @Param("tags") List<String> tags,
                           Pageable pageable);
     
     // 인기 크루 조회 (참여자 수 기준)
