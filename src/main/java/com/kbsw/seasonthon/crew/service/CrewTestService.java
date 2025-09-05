@@ -140,8 +140,9 @@ public class CrewTestService {
         // 테스트용 더미 데이터 생성
         List<CrewListResponse> dummyCrews = createDummyCrewList();
         
-        // 간단한 필터링 로직
+        // 간단한 필터링 로직 (현재 CrewSearchRequest에 있는 필드들만 사용)
         List<CrewListResponse> filteredCrews = dummyCrews.stream()
+            // 검색 필드들 (조회용)
             .filter(crew -> request.getKeyword() == null || 
                     crew.getTitle().contains(request.getKeyword()) ||
                     crew.getDescription().contains(request.getKeyword()))
@@ -151,18 +152,15 @@ public class CrewTestService {
                     crew.getStatus().name().equalsIgnoreCase(request.getStatus()))
             .filter(crew -> request.getSafetyLevel() == null || 
                     crew.getSafetyLevel().name().equalsIgnoreCase(request.getSafetyLevel()))
-            .filter(crew -> request.getMinDistance() == null || 
-                    crew.getDistanceKm() >= request.getMinDistance())
+            .filter(crew -> request.getTags() == null || request.getTags().isEmpty() ||
+                    request.getTags().stream().anyMatch(tag -> crew.getTags().contains(tag)))
+            // 실제 필터링 필드들
             .filter(crew -> request.getMaxDistance() == null || 
                     crew.getDistanceKm() <= request.getMaxDistance())
             .filter(crew -> request.getMinPace() == null || 
-                    (crew.getPace() != null && comparePace(crew.getPace(), request.getMinPace()) <= 0))
-            .filter(crew -> request.getMaxPace() == null || 
-                    (crew.getPace() != null && comparePace(crew.getPace(), request.getMaxPace()) >= 0))
+                    (crew.getPace() != null && comparePace(crew.getPace(), request.getMinPace()) >= 0))
             .filter(crew -> request.getStartTimeFrom() == null || 
                     (crew.getStartTime() != null && crew.getStartTime().isAfter(request.getStartTimeFrom())))
-            .filter(crew -> request.getStartTimeTo() == null || 
-                    (crew.getStartTime() != null && crew.getStartTime().isBefore(request.getStartTimeTo())))
             .collect(Collectors.toList());
         
         // 정렬 적용
