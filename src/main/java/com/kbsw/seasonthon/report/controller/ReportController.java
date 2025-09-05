@@ -32,6 +32,20 @@ import java.util.List;
 public class ReportController {
 
     private final ReportService reportService;
+    
+    /**
+     * 테스트 엔드포인트
+     */
+    @GetMapping("/test")
+    @Operation(summary = "테스트", description = "ReportController 테스트")
+    public ResponseEntity<ResponseBody<String>> test() {
+        try {
+            return ResponseEntity.ok(ResponseUtil.createSuccessResponse("ReportController is working!"));
+        } catch (Exception e) {
+            log.error("ReportController 테스트 오류: {}", e.getMessage(), e);
+            return ResponseEntity.ok(ResponseUtil.createErrorResponse("C001", "ReportController 오류: " + e.getMessage()));
+        }
+    }
 
     /**
      * 신고 생성
