@@ -1,5 +1,6 @@
 package com.kbsw.seasonthon.favorite.dto.response;
 
+import com.kbsw.seasonthon.crew.enums.SafetyLevel;
 import com.kbsw.seasonthon.favorite.entity.Favorite;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,6 +22,9 @@ public class FavoriteResponse {
     private String savedPolyline;
     private Integer distanceM;
     private Integer durationS;
+    private Integer safetyScore;
+    private SafetyLevel safetyLevel;
+    private List<String> tags;
     private LocalDateTime createdAt;
 
     public static FavoriteResponse from(Favorite favorite) {
@@ -31,6 +35,9 @@ public class FavoriteResponse {
                 .savedPolyline(favorite.getSavedPolyline())
                 .distanceM(favorite.getDistanceM())
                 .durationS(favorite.getDurationS())
+                .safetyScore(favorite.getSafetyScore())
+                .safetyLevel(favorite.getSafetyLevel())
+                .tags(favorite.getTags())
                 .createdAt(favorite.getCreatedAt())
                 .build();
     }

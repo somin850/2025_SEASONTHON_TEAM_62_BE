@@ -1,5 +1,6 @@
 package com.kbsw.seasonthon.favorite.dto.request;
 
+import com.kbsw.seasonthon.crew.enums.SafetyLevel;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -30,4 +31,10 @@ public class FavoriteCreateRequest {
     private Integer distanceM;
 
     private Integer durationS;
+
+    private Integer safetyScore;
+
+    private SafetyLevel safetyLevel;
+
+    private List<String> tags;
 }

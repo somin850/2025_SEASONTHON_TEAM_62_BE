@@ -1,5 +1,6 @@
 package com.kbsw.seasonthon.favorite.entity;
 
+import com.kbsw.seasonthon.crew.enums.SafetyLevel;
 import com.kbsw.seasonthon.global.base.domain.BaseEntity;
 import com.kbsw.seasonthon.user.entity.User;
 import jakarta.persistence.*;
@@ -41,6 +42,19 @@ public class Favorite extends BaseEntity {
     @Column
     private Integer durationS;
 
+    @Column
+    private Integer safetyScore;
+
+    @Enumerated(EnumType.STRING)
+    @Column
+    private SafetyLevel safetyLevel;
+
+    @ElementCollection
+    @CollectionTable(name = "favorite_tags", joinColumns = @JoinColumn(name = "favorite_id"))
+    @Column(name = "tag")
+    @Builder.Default
+    private List<String> tags = List.of();
+
     public void updateName(String name) {
         this.name = name;
     }
@@ -59,5 +73,17 @@ public class Favorite extends BaseEntity {
 
     public void updateDurationS(Integer durationS) {
         this.durationS = durationS;
+    }
+
+    public void updateSafetyScore(Integer safetyScore) {
+        this.safetyScore = safetyScore;
+    }
+
+    public void updateSafetyLevel(SafetyLevel safetyLevel) {
+        this.safetyLevel = safetyLevel;
+    }
+
+    public void updateTags(List<String> tags) {
+        this.tags = tags;
     }
 }

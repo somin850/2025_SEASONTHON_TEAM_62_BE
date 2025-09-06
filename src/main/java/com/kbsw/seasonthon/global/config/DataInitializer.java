@@ -7,6 +7,8 @@ import com.kbsw.seasonthon.crew.enums.ParticipantStatus;
 import com.kbsw.seasonthon.crew.enums.SafetyLevel;
 import com.kbsw.seasonthon.crew.repository.CrewParticipantRepository;
 import com.kbsw.seasonthon.crew.repository.CrewRepository;
+import com.kbsw.seasonthon.favorite.entity.Favorite;
+import com.kbsw.seasonthon.favorite.repository.FavoriteRepository;
 import com.kbsw.seasonthon.report.entity.Report;
 import com.kbsw.seasonthon.report.enums.ReportStatus;
 import com.kbsw.seasonthon.report.enums.TargetType;
@@ -35,6 +37,7 @@ public class DataInitializer implements CommandLineRunner {
     private final CrewRepository crewRepository;
     private final CrewParticipantRepository crewParticipantRepository;
     private final ReportRepository reportRepository;
+    private final FavoriteRepository favoriteRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -60,6 +63,9 @@ public class DataInitializer implements CommandLineRunner {
         
         // 4. 신고 테스트 데이터 생성
         createTestReports(testUsers);
+        
+        // 5. 즐겨찾기 테스트 데이터 생성
+        createTestFavorites(testUsers);
     }
 
     private List<User> createTestUsers() {
@@ -918,5 +924,306 @@ public class DataInitializer implements CommandLineRunner {
         
         reportRepository.saveAll(reports);
         log.info("신고 테스트 데이터 {} 개 생성 완료", reports.size());
+    }
+
+    private void createTestFavorites(List<User> users) {
+        log.info("테스트 즐겨찾기 데이터 생성 중...");
+        
+        List<Favorite> favorites = Arrays.asList(
+            // 다양한 안전도와 태그를 가진 즐겨찾기 데이터들
+            Favorite.builder()
+                .user(users.get(0)) // 취준러너김
+                .name("대전 유성구 안전한 러닝 코스")
+                .waypoints(Arrays.asList(
+                    "36.3504,127.3845",
+                    "36.3514,127.3855", 
+                    "36.3509,127.3835"
+                ))
+                .savedPolyline("encoded_polyline_data_1")
+                .distanceM(4500)
+                .durationS(2100) // 35분
+                .safetyScore(92)
+                .safetyLevel(SafetyLevel.SAFE)
+                .tags(Arrays.asList("안전한", "가로등", "평지", "공원", "대전"))
+                .build(),
+                
+            Favorite.builder()
+                .user(users.get(1)) // 내성적인박
+                .name("부산 해운대 조용한 산책로")
+                .waypoints(Arrays.asList(
+                    "35.1595,129.1606",
+                    "35.1605,129.1616",
+                    "35.1615,129.1626"
+                ))
+                .savedPolyline("encoded_polyline_data_2")
+                .distanceM(3800)
+                .durationS(1680) // 28분
+                .safetyScore(95)
+                .safetyLevel(SafetyLevel.SAFE)
+                .tags(Arrays.asList("조용한", "해변", "경치좋은", "부산", "초보환영"))
+                .build(),
+                
+            Favorite.builder()
+                .user(users.get(2)) // 대학생조
+                .name("대구 앞산공원 친구들과 함께")
+                .waypoints(Arrays.asList(
+                    "35.8200,128.5400",
+                    "35.8210,128.5410",
+                    "35.8220,128.5420"
+                ))
+                .savedPolyline("encoded_polyline_data_3")
+                .distanceM(5000)
+                .durationS(2280) // 38분
+                .safetyScore(88)
+                .safetyLevel(SafetyLevel.SAFE)
+                .tags(Arrays.asList("대학생", "친구들과", "공원", "대구", "활기찬"))
+                .build(),
+                
+            Favorite.builder()
+                .user(users.get(3)) // 친화적인이
+                .name("광주 5·18기념공원 힐링 코스")
+                .waypoints(Arrays.asList(
+                    "35.1500,126.9100",
+                    "35.1510,126.9110",
+                    "35.1520,126.9120"
+                ))
+                .savedPolyline("encoded_polyline_data_4")
+                .distanceM(4200)
+                .durationS(1920) // 32분
+                .safetyScore(90)
+                .safetyLevel(SafetyLevel.SAFE)
+                .tags(Arrays.asList("힐링", "역사적", "평화로운", "광주", "의미있는"))
+                .build(),
+                
+            Favorite.builder()
+                .user(users.get(4)) // 프리랜서최
+                .name("전주 덕진공원 프리랜서 네트워킹")
+                .waypoints(Arrays.asList(
+                    "35.8242,127.1480",
+                    "35.8252,127.1490",
+                    "35.8262,127.1500"
+                ))
+                .savedPolyline("encoded_polyline_data_5")
+                .distanceM(5500)
+                .durationS(2520) // 42분
+                .safetyScore(85)
+                .safetyLevel(SafetyLevel.SAFE)
+                .tags(Arrays.asList("프리랜서", "네트워킹", "연못", "전주", "자유로운"))
+                .build(),
+                
+            Favorite.builder()
+                .user(users.get(5)) // 러닝초보강
+                .name("청주 용담댓가 초보자 코스")
+                .waypoints(Arrays.asList(
+                    "36.6358,127.4916",
+                    "36.6368,127.4926"
+                ))
+                .savedPolyline("encoded_polyline_data_6")
+                .distanceM(2800)
+                .durationS(1500) // 25분
+                .safetyScore(98)
+                .safetyLevel(SafetyLevel.SAFE)
+                .tags(Arrays.asList("초보자", "짧은거리", "안전한", "청주", "부담없는"))
+                .build(),
+                
+            Favorite.builder()
+                .user(users.get(6)) // 사교적인정
+                .name("천안 독립기념관 에너지 충전 코스")
+                .waypoints(Arrays.asList(
+                    "36.8151,127.1139",
+                    "36.8161,127.1149",
+                    "36.8171,127.1159"
+                ))
+                .savedPolyline("encoded_polyline_data_7")
+                .distanceM(6200)
+                .durationS(2880) // 48분
+                .safetyScore(87)
+                .safetyLevel(SafetyLevel.SAFE)
+                .tags(Arrays.asList("에너지충전", "역사", "긴거리", "천안", "활동적"))
+                .build(),
+                
+            Favorite.builder()
+                .user(users.get(7)) // 외로운윤
+                .name("창원 용지공원 혼자만의 시간")
+                .waypoints(Arrays.asList(
+                    "35.2281,128.6811",
+                    "35.2291,128.6821",
+                    "35.2301,128.6831"
+                ))
+                .savedPolyline("encoded_polyline_data_8")
+                .distanceM(4000)
+                .durationS(1920) // 32분
+                .safetyScore(92)
+                .safetyLevel(SafetyLevel.SAFE)
+                .tags(Arrays.asList("혼자", "조용한", "사색", "창원", "평화로운"))
+                .build(),
+                
+            Favorite.builder()
+                .user(users.get(8)) // 직장인한
+                .name("포항 영일대 퇴근 후 스트레스 해소")
+                .waypoints(Arrays.asList(
+                    "36.0190,129.3650",
+                    "36.0200,129.3660",
+                    "36.0210,129.3670"
+                ))
+                .savedPolyline("encoded_polyline_data_9")
+                .distanceM(5800)
+                .durationS(2700) // 45분
+                .safetyScore(86)
+                .safetyLevel(SafetyLevel.SAFE)
+                .tags(Arrays.asList("직장인", "스트레스해소", "바다", "포항", "퇴근후"))
+                .build(),
+                
+            Favorite.builder()
+                .user(users.get(9)) // 운동초보송
+                .name("진주 남강댐 운동 첫걸음")
+                .waypoints(Arrays.asList(
+                    "35.1797,128.1076",
+                    "35.1807,128.1086",
+                    "35.1817,128.1096"
+                ))
+                .savedPolyline("encoded_polyline_data_10")
+                .distanceM(3200)
+                .durationS(1680) // 28분
+                .safetyScore(96)
+                .safetyLevel(SafetyLevel.SAFE)
+                .tags(Arrays.asList("운동초보", "첫걸음", "댐", "진주", "천천히"))
+                .build(),
+                
+            // 중간 안전도 코스들
+            Favorite.builder()
+                .user(users.get(10)) // 조용한오
+                .name("순천만 국가정원 중간 난이도")
+                .waypoints(Arrays.asList(
+                    "34.8853,127.5095",
+                    "34.8863,127.5105",
+                    "34.8873,127.5115"
+                ))
+                .savedPolyline("encoded_polyline_data_11")
+                .distanceM(4800)
+                .durationS(2280) // 38분
+                .safetyScore(75)
+                .safetyLevel(SafetyLevel.MEDIUM)
+                .tags(Arrays.asList("자연", "습지", "중간난이도", "순천", "생태"))
+                .build(),
+                
+            Favorite.builder()
+                .user(users.get(11)) // 의욕적인임
+                .name("목포 평화광장 도전 코스")
+                .waypoints(Arrays.asList(
+                    "34.7881,126.3925",
+                    "34.7891,126.3935",
+                    "34.7901,126.3945"
+                ))
+                .savedPolyline("encoded_polyline_data_12")
+                .distanceM(6500)
+                .durationS(3000) // 50분
+                .safetyScore(70)
+                .safetyLevel(SafetyLevel.MEDIUM)
+                .tags(Arrays.asList("도전적", "긴거리", "바다", "목포", "의욕적"))
+                .build(),
+                
+            // 위험도가 있는 코스들 (고급자용)
+            Favorite.builder()
+                .user(users.get(12)) // 졸업생남
+                .name("군산 은파호수 고급자 코스")
+                .waypoints(Arrays.asList(
+                    "35.9674,126.7188",
+                    "35.9684,126.7198",
+                    "35.9694,126.7208"
+                ))
+                .savedPolyline("encoded_polyline_data_13")
+                .distanceM(5200)
+                .durationS(2520) // 42분
+                .safetyScore(65)
+                .safetyLevel(SafetyLevel.MEDIUM)
+                .tags(Arrays.asList("고급자", "호수", "도전", "군산", "경험자"))
+                .build(),
+                
+            Favorite.builder()
+                .user(users.get(13)) // 새내기서
+                .name("익산 미륵사지 탐험 코스")
+                .waypoints(Arrays.asList(
+                    "35.9907,126.9624",
+                    "35.9917,126.9634",
+                    "35.9927,126.9644"
+                ))
+                .savedPolyline("encoded_polyline_data_14")
+                .distanceM(4600)
+                .durationS(2160) // 36분
+                .safetyScore(78)
+                .safetyLevel(SafetyLevel.MEDIUM)
+                .tags(Arrays.asList("탐험", "역사유적", "문화", "익산", "새로운"))
+                .build(),
+                
+            // 같은 사용자가 여러 즐겨찾기를 가진 경우
+            Favorite.builder()
+                .user(users.get(0)) // 취준러너김 (두 번째 즐겨찾기)
+                .name("대전 엑스포공원 야간 러닝")
+                .waypoints(Arrays.asList(
+                    "36.3704,127.3845",
+                    "36.3714,127.3855"
+                ))
+                .savedPolyline("encoded_polyline_data_15")
+                .distanceM(3500)
+                .durationS(1800) // 30분
+                .safetyScore(82)
+                .safetyLevel(SafetyLevel.SAFE)
+                .tags(Arrays.asList("야간", "조명좋은", "엑스포", "대전", "안전한"))
+                .build(),
+
+            // 강원도 소외지역 즐겨찾기들
+            Favorite.builder()
+                .user(users.get(5)) // 러닝초보강
+                .name("태백 황지연못 힐링 러닝")
+                .waypoints(Arrays.asList(
+                    "37.1641,128.9856",
+                    "37.1651,128.9866",
+                    "37.1661,128.9876"
+                ))
+                .savedPolyline("encoded_polyline_data_16")
+                .distanceM(4200)
+                .durationS(2400) // 40분
+                .safetyScore(88)
+                .safetyLevel(SafetyLevel.SAFE)
+                .tags(Arrays.asList("태백", "황지연못", "힐링", "소외지역", "자연", "평화로운", "강원도"))
+                .build(),
+
+            Favorite.builder()
+                .user(users.get(7)) // 외로운윤
+                .name("정선 아리랑시장 주변 산책")
+                .waypoints(Arrays.asList(
+                    "37.3804,128.6607",
+                    "37.3814,128.6617",
+                    "37.3824,128.6627"
+                ))
+                .savedPolyline("encoded_polyline_data_17")
+                .distanceM(3600)
+                .durationS(2160) // 36분
+                .safetyScore(75)
+                .safetyLevel(SafetyLevel.MEDIUM)
+                .tags(Arrays.asList("정선", "아리랑", "전통시장", "문화", "소외지역", "향토", "강원도"))
+                .build(),
+
+            Favorite.builder()
+                .user(users.get(10)) // 조용한오
+                .name("영월 동강 자전거길 러닝 코스")
+                .waypoints(Arrays.asList(
+                    "37.1833,128.4611",
+                    "37.1843,128.4621",
+                    "37.1853,128.4631",
+                    "37.1863,128.4641"
+                ))
+                .savedPolyline("encoded_polyline_data_18")
+                .distanceM(5800)
+                .durationS(3480) // 58분
+                .safetyScore(68)
+                .safetyLevel(SafetyLevel.MEDIUM)
+                .tags(Arrays.asList("영월", "동강", "자전거길", "강변", "소외지역", "자연경관", "강원도", "긴거리"))
+                .build()
+        );
+        
+        favoriteRepository.saveAll(favorites);
+        log.info("즐겨찾기 테스트 데이터 {} 개 생성 완료", favorites.size());
     }
 }

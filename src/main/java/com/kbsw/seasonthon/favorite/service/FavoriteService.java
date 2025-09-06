@@ -47,6 +47,9 @@ public class FavoriteService {
                 .savedPolyline(request.getSavedPolyline())
                 .distanceM(request.getDistanceM())
                 .durationS(request.getDurationS())
+                .safetyScore(request.getSafetyScore())
+                .safetyLevel(request.getSafetyLevel())
+                .tags(request.getTags() != null ? request.getTags() : List.of())
                 .build();
 
         Favorite savedFavorite = favoriteRepository.save(favorite);
