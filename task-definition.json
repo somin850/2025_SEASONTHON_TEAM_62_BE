@@ -1,0 +1,80 @@
+{
+  "family": "seasonthon-task",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::883105811636:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "seasonthon-app",
+      "image": "883105811636.dkr.ecr.ap-northeast-2.amazonaws.com/seasonthon:latest",
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "hostPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "SPRING_PROFILES_ACTIVE",
+          "value": "prod"
+        },
+        {
+          "name": "SPRING_DATASOURCE_URL",
+          "value": "jdbc:mysql://seasonthon-mysql.ch2my6wuyfnt.ap-northeast-2.rds.amazonaws.com:3306/SeasonThon?useSSL=false&characterEncoding=UTF-8&serverTimezone=UTC"
+        },
+        {
+          "name": "SPRING_DATASOURCE_USERNAME",
+          "value": "admin"
+        },
+        {
+          "name": "SPRING_DATASOURCE_PASSWORD",
+          "value": "SeasonThon2024!"
+        },
+        {
+          "name": "JWT_SECRET",
+          "value": "394kr6dvlZiSi+kUIDqy4Q/ho/Dt3pqcMNXCS6kruCjdGBHGfBcaNzjLUqGnS0JFueBgm/QrKskwf5mQIBgLtw=="
+        },
+        {
+          "name": "GOOGLE_CLIENT_ID",
+          "value": "${GOOGLE_CLIENT_ID}"
+        },
+        {
+          "name": "GOOGLE_CLIENT_SECRET",
+          "value": "${GOOGLE_CLIENT_SECRET}"
+        },
+        {
+          "name": "NAVER_CLIENT_ID",
+          "value": "zKU2JcvL2aGeiLG2xpWI"
+        },
+        {
+          "name": "NAVER_CLIENT_SECRET",
+          "value": "LvDiJCIhid"
+        },
+        {
+          "name": "KAKAO_CLIENT_ID",
+          "value": "bbe833ae2a34f50da00470f4df648388"
+        },
+        {
+          "name": "KAKAO_CLIENT_SECRET",
+          "value": "RJhuZVwhlo42B7tQx0ZyBZiVqyGbVDcf"
+        },
+        {
+          "name": "BASE_URL",
+          "value": "https://your-domain.com/"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/seasonthon",
+          "awslogs-region": "ap-northeast-2",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "essential": true
+    }
+  ]
+}

@@ -21,3 +21,5 @@ public interface CrewParticipantRepository extends JpaRepository<CrewParticipant
     
     boolean existsByCrewAndUser(Crew crew, User user);
 }
+
+

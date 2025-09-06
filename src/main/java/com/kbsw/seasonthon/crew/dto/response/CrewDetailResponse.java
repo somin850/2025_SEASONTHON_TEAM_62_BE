@@ -44,3 +44,5 @@ public class CrewDetailResponse {
         private LocalDateTime appliedAt;
     }
 }
+
+

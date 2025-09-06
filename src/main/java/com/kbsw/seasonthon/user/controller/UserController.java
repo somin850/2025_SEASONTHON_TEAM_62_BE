@@ -2,7 +2,6 @@ package com.kbsw.seasonthon.user.controller;
 
 
 import com.kbsw.seasonthon.global.base.response.ResponseUtil;
-import com.kbsw.seasonthon.security.oauth2.principal.PrincipalDetails;
 import com.kbsw.seasonthon.user.dto.request.SignUpRequestDto;
 import com.kbsw.seasonthon.user.dto.response.UserResponseDto;
 import com.kbsw.seasonthon.global.base.response.ResponseBody;
@@ -13,7 +12,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "User API", description = "유저 및 회원가입 관련 API")
@@ -38,8 +36,10 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public UserResponseDto me(@AuthenticationPrincipal PrincipalDetails principal) {
-        return userService.getUserInfoById(principal.getUser().getId());
+    @Operation(summary = "내 정보 조회", description = "현재 사용자의 정보를 조회합니다. (개발 모드: 더미 사용자)")
+    public UserResponseDto me() {
+        // 개발 모드: 더미 사용자 ID 사용 (admin 사용자)
+        return userService.getUserInfoById(4L);
     }
 
 

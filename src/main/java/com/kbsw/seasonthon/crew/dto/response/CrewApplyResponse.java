@@ -9,3 +9,5 @@ import lombok.Getter;
 public class CrewApplyResponse {
     private ParticipantStatus status;
 }
+
+

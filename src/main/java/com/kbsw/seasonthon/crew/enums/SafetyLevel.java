@@ -23,3 +23,5 @@ public enum SafetyLevel {
         return UNSAFE; // 기본값
     }
 }
+
+

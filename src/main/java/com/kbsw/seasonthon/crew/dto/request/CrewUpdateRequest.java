@@ -20,3 +20,5 @@ public class CrewUpdateRequest {
     private String pace;                 // 페이스 (예: "6'30\"/km")
     private LocalDateTime startTime;     // 시작 시간
 }
+
+

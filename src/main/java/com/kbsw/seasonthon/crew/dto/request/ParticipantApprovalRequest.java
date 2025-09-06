@@ -10,3 +10,5 @@ import lombok.Setter;
 public class ParticipantApprovalRequest {
     private Boolean approve;
 }
+
+

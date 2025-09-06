@@ -8,9 +8,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 @RestController
@@ -47,4 +49,56 @@ public class RouteController {
         
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/selected-route")
+    @Operation(summary = "선택된 경로 저장", description = "사용자가 선택한 경로를 저장합니다.")
+    public ResponseEntity<Map<String, Object>> saveSelectedRoute(@RequestBody Map<String, Object> routeData) {
+        log.info("선택된 경로 저장 요청: {}", routeData.get("route_id"));
+        
+        try {
+            // AI 모델에 선택된 경로 전송
+            String aiServiceUrl = "http://43.202.57.158:5000";
+            String url = aiServiceUrl + "/api/selected-route";
+            
+            // AI 모델에 전송할 데이터 준비
+            Map<String, Object> requestBody = Map.of(
+                "route_id", routeData.getOrDefault("route_id", "unknown"),
+                "type", routeData.getOrDefault("type", "safe"),
+                "distance_km", routeData.getOrDefault("distance_km", 5.0),
+                "safety_score", routeData.getOrDefault("safety_score", 50),
+                "estimated_time_min", routeData.getOrDefault("estimated_time_min", 30),
+                "waypoints", routeData.getOrDefault("waypoints", List.of())
+            );
+            
+            // RestTemplate을 사용하여 AI 모델에 전송
+            RestTemplate restTemplate = new RestTemplate();
+            Map<String, Object> response = restTemplate.postForObject(url, requestBody, Map.class);
+            
+            if (response != null && "success".equals(response.get("status"))) {
+                log.info("경로 저장 성공: {}", response.get("route_id"));
+                return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "경로가 성공적으로 저장되었습니다.",
+                    "route_id", response.get("route_id")
+                ));
+            } else {
+                log.warn("경로 저장 실패: {}", response);
+                return ResponseEntity.ok(Map.of(
+                    "success", false,
+                    "message", "경로 저장에 실패했습니다.",
+                    "error", response != null ? response.get("error") : "Unknown error"
+                ));
+            }
+            
+        } catch (Exception e) {
+            log.error("경로 저장 중 오류 발생: {}", e.getMessage(), e);
+            return ResponseEntity.ok(Map.of(
+                "success", false,
+                "message", "경로 저장 중 오류가 발생했습니다.",
+                "error", e.getMessage()
+            ));
+        }
+    }
 }
+
+

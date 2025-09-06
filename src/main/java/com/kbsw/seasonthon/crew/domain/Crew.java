@@ -147,3 +147,5 @@ public class Crew extends BaseEntity {
         return isHost(user) || user.getRole().name().equals("ADMIN");
     }
 }
+
+

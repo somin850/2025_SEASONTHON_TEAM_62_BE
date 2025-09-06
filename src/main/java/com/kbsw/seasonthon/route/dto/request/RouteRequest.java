@@ -17,3 +17,5 @@ public class RouteRequest {
     private Integer durationMin;
     private List<List<Double>> waypoints;
 }
+
+

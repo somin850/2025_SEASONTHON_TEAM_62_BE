@@ -15,3 +15,5 @@ public class RouteResponse {
     private Integer durationMin;
     private List<List<Double>> waypoints;
 }
+
+

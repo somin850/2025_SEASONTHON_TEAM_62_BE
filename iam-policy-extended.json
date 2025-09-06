@@ -1,0 +1,37 @@
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Action": [
+				"rds:*",
+				"ec2:DescribeVpcs",
+				"ec2:DescribeSubnets",
+				"ec2:DescribeInternetGateways",
+				"ec2:DescribeRouteTables",
+				"ec2:DescribeAvailabilityZones",
+				"ec2:CreateSecurityGroup",
+				"ec2:AuthorizeSecurityGroupIngress",
+				"ec2:DescribeSecurityGroups",
+				"ec2:DescribeNetworkInterfaces",
+				"ec2:AllocateAddress",
+				"ec2:AssociateAddress",
+				"ec2:DescribeAddresses",
+				"ec2:ReleaseAddress",
+				"ec2:DisassociateAddress",
+				"ecs:*",
+				"ecr:*",
+				"logs:*",
+				"elasticloadbalancing:*",
+				"iam:PassRole",
+				"iam:GetRole",
+				"iam:ListRoles",
+				"iam:CreateServiceLinkedRole",
+				"iam:AttachRolePolicy",
+				"iam:CreateRole",
+				"iam:PutRolePolicy"
+			],
+			"Resource": "*"
+		}
+	]
+}
